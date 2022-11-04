@@ -1,0 +1,14 @@
+
+#editorpart {
+    width: 100%;
+
+    align: center;
+
+    display: flex;
+    flex-direction: row;
+}
+
+#codeeditor {
+    width: 80%;
+    height: 50em;
+}
