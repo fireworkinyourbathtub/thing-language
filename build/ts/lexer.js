@@ -23,104 +23,187 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.lex = void 0;
+exports.lex = exports.EOF = exports.BoolLiteral = exports.NumberLiteral = exports.StringLiteral = exports.Identifier = exports.While = exports.Var = exports.This = exports.Super = exports.Return = exports.Print = exports.Or = exports.Nil = exports.If = exports.Fun = exports.For = exports.Else = exports.Class = exports.And = exports.BangEqual = exports.GreaterEqual = exports.EqualEqual = exports.LessEqual = exports.Bang = exports.Greater = exports.Equal = exports.Less = exports.Semicolon = exports.CBrace = exports.OBrace = exports.Slash = exports.Star = exports.Minus = exports.Plus = exports.Dot = exports.Comma = exports.CParen = exports.OParen = exports.Token = void 0;
 const diagnostics = __importStar(require("./diagnostics"));
 class Token {
 }
+exports.Token = Token;
 class OParen extends Token {
+    type() { return "'('"; }
 }
+exports.OParen = OParen;
 class CParen extends Token {
+    type() { return "')'"; }
 }
+exports.CParen = CParen;
 class Comma extends Token {
+    type() { return "','"; }
 }
+exports.Comma = Comma;
 class Dot extends Token {
+    type() { return "'.'"; }
 }
+exports.Dot = Dot;
 class Plus extends Token {
+    type() { return "'+'"; }
 }
+exports.Plus = Plus;
 class Minus extends Token {
+    type() { return "'-'"; }
 }
+exports.Minus = Minus;
 class Star extends Token {
+    type() { return "'*'"; }
 }
+exports.Star = Star;
 class Slash extends Token {
+    type() { return "'/'"; }
 }
+exports.Slash = Slash;
 class OBrace extends Token {
+    type() { return "'{'"; }
 }
+exports.OBrace = OBrace;
 class CBrace extends Token {
+    type() { return "'}'"; }
 }
+exports.CBrace = CBrace;
 class Semicolon extends Token {
+    type() { return "';'"; }
 }
+exports.Semicolon = Semicolon;
 class Less extends Token {
+    type() { return "'<'"; }
 }
+exports.Less = Less;
 class Equal extends Token {
+    type() { return "'='"; }
 }
+exports.Equal = Equal;
 class Greater extends Token {
+    type() { return "'>'"; }
 }
+exports.Greater = Greater;
 class Bang extends Token {
+    type() { return "'!'"; }
 }
+exports.Bang = Bang;
 class LessEqual extends Token {
+    type() { return "'<='"; }
 }
+exports.LessEqual = LessEqual;
 class EqualEqual extends Token {
+    type() { return "'=='"; }
 }
+exports.EqualEqual = EqualEqual;
 class GreaterEqual extends Token {
+    type() { return "'>='"; }
 }
+exports.GreaterEqual = GreaterEqual;
 class BangEqual extends Token {
+    type() { return "'!='"; }
 }
+exports.BangEqual = BangEqual;
 class And extends Token {
+    type() { return "'and'"; }
 }
+exports.And = And;
 class Class extends Token {
+    type() { return "'class'"; }
 }
+exports.Class = Class;
 class Else extends Token {
+    type() { return "'else'"; }
 }
-class False extends Token {
-}
+exports.Else = Else;
 class For extends Token {
+    type() { return "'for'"; }
 }
+exports.For = For;
 class Fun extends Token {
+    type() { return "'fun'"; }
 }
+exports.Fun = Fun;
 class If extends Token {
+    type() { return "'if'"; }
 }
+exports.If = If;
 class Nil extends Token {
+    type() { return "'nil'"; }
 }
+exports.Nil = Nil;
 class Or extends Token {
+    type() { return "'or'"; }
 }
+exports.Or = Or;
 class Print extends Token {
+    type() { return "'print'"; }
 }
+exports.Print = Print;
 class Return extends Token {
+    type() { return "'return'"; }
 }
+exports.Return = Return;
 class Super extends Token {
+    type() { return "'super'"; }
 }
+exports.Super = Super;
 class This extends Token {
+    type() { return "'this'"; }
 }
-class True extends Token {
-}
+exports.This = This;
 class Var extends Token {
+    type() { return "'var'"; }
 }
+exports.Var = Var;
 class While extends Token {
+    type() { return "'while'"; }
 }
+exports.While = While;
 class Identifier extends Token {
     constructor(name) {
         super();
         this.name = name;
     }
+    type() { return "identifier"; }
 }
+exports.Identifier = Identifier;
 class StringLiteral extends Token {
     constructor(str) {
         super();
         this.str = str;
     }
+    type() { return "string literal"; }
 }
+exports.StringLiteral = StringLiteral;
 class NumberLiteral extends Token {
     constructor(num) {
         super();
         this.num = num;
     }
+    type() { return "number literal"; }
 }
-class BadCharacter extends diagnostics.Diagnostic {
-    // TODO: span
-    constructor(ch) {
+exports.NumberLiteral = NumberLiteral;
+class BoolLiteral extends Token {
+    constructor(bool) {
         super();
+        this.bool = bool;
+    }
+    type() { return "bool literal"; }
+}
+exports.BoolLiteral = BoolLiteral;
+class EOF extends Token {
+    type() { return "eof"; }
+}
+exports.EOF = EOF;
+class BadCharacter extends diagnostics.Diagnostic {
+    constructor(ch) {
+        super(`bad character: ${ch}`, null);
         this.ch = ch;
     }
+}
+class UnterminatedString extends diagnostics.Diagnostic {
+    constructor() { super("unterminated string", null); }
 }
 class Lexer {
     constructor(source) {
@@ -132,15 +215,16 @@ class Lexer {
         let tokens = [];
         while (!this.at_end()) {
             let tok_start = this.ind;
-            let tok = this.lex_single_token();
+            let tok = this.lex_single_token(tok_start);
             let tok_end = this.ind;
             if (tok != null) {
-                tokens.push(tok);
+                tokens.push(new diagnostics.Located(tok, new diagnostics.Span(this.source, tok_start, tok_end)));
             }
         }
-        return tokens;
+        let eof = new diagnostics.Located(new EOF(), this.span(this.ind));
+        return [tokens, eof];
     }
-    lex_single_token() {
+    lex_single_token(start_ind) {
         let c = this.advance();
         if (c == null) {
             return null;
@@ -176,7 +260,7 @@ class Lexer {
             case '=': return this.match('=') ? new EqualEqual() : new Equal();
             case '<': return this.match('=') ? new LessEqual() : new Less();
             case '>': return this.match('=') ? new GreaterEqual() : new Greater();
-            case '"': return this.string();
+            case '"': return this.string(start_ind);
             default:
                 if (this.is_digit(c)) {
                     return this.number();
@@ -185,18 +269,18 @@ class Lexer {
                     return this.identifier();
                 }
                 else {
-                    // TODO: report error return new BadCharacter(c);
+                    diagnostics.report(new diagnostics.Located(new BadCharacter(c), this.span(start_ind)));
                     return null;
                 }
         }
     }
-    string() {
+    string(start_ind) {
         let lit_start = this.ind;
         while (!this.at_end() && this.peek() != '"') {
             this.advance();
         }
         if (this.at_end()) {
-            // TODO: Lox.error(line, "Unterminated string.");
+            diagnostics.report(new diagnostics.Located(new UnterminatedString(), this.span(start_ind)));
             return null;
         }
         let lit_end = this.ind;
@@ -226,7 +310,7 @@ class Lexer {
             case "and": return new And();
             case "class": return new Class();
             case "else": return new Else();
-            case "false": return new False();
+            case "false": return new BoolLiteral(false);
             case "for": return new For();
             case "fun": return new Fun();
             case "if": return new If();
@@ -236,7 +320,7 @@ class Lexer {
             case "return": return new Return();
             case "super": return new Super();
             case "this": return new This();
-            case "true": return new True();
+            case "true": return new BoolLiteral(true);
             case "var": return new Var();
             case "while": return new While();
             default: return new Identifier(str);
@@ -298,6 +382,9 @@ class Lexer {
         else {
             return false;
         }
+    }
+    span(start) {
+        return new diagnostics.Span(this.source, start, this.ind);
     }
 }
 function lex(input) {

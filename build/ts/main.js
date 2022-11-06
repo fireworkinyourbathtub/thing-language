@@ -23,13 +23,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const diagnostics = __importStar(require("./diagnostics"));
 const lexer = __importStar(require("./lexer"));
+const parser = __importStar(require("./parser"));
 let editor = ace.edit("codeeditor");
 editor.setOption("printMarginColumn", false);
 document.getElementById('submitbutton').addEventListener('click', function () {
     let inputcodebox = document.getElementById('inputcodebox');
     let input = editor.getValue();
-    document.getElementById("codeview").textContent = input;
-    let lexed = lexer.lex(input);
-    console.log(lexed);
+    diagnostics.clear();
+    let result = parser.parse(lexer.lex(input));
+    console.log(result);
 });
