@@ -23,43 +23,54 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Map = exports.OneMore = exports.ZeroMore = exports.Choice = exports.Chain = exports.Token = exports.PEG = exports.Expected = exports.ParseError = exports.Parser = void 0;
+exports.Apply = exports.OneMore = exports.ZeroMore = exports.Choice = exports.Chain = exports.Token = exports.PEG = exports.ParseLocation = exports.Parser = void 0;
 const diagnostics = __importStar(require("./diagnostics"));
-const pratica = __importStar(require("pratica"));
 class Parser {
-    constructor(tokens, eof, ind) {
+    constructor(tokens, eof) {
         this.tokens = tokens;
         this.eof = eof;
-        this.ind = ind;
+        this.errors = new Map();
     }
-    advance() {
-        return new Parser(this.tokens, this.eof, this.ind + 1);
+    error(ind, expect) {
+        if (!this.errors.has(ind)) {
+            this.errors.set(ind, []);
+        }
+        this.errors.get(ind).push(expect);
     }
-    cur_tok() {
-        if (this.ind >= this.tokens.length) {
+    report_error() {
+        let max_ind = Math.max(...this.errors.keys());
+        let got = this.get_tok(max_ind);
+        let es = this.errors.get(max_ind);
+        let explanation;
+        if (es.length == 1) {
+            explanation = `expected ${es[0]}, got ${got.thing.type()}`;
+        }
+        else {
+            explanation = `expected one of ${es}, got ${got.thing.type()}`;
+        }
+        diagnostics.report(new diagnostics.Located(new diagnostics.Diagnostic(`parse error: ${explanation}`, null), got.span));
+    }
+    get_tok(ind) {
+        if (ind >= this.tokens.length) {
             return this.eof;
         }
         else {
-            return this.tokens[this.ind];
+            return this.tokens[ind];
         }
     }
 }
 exports.Parser = Parser;
-class ParseError extends diagnostics.Diagnostic {
-    constructor(parser, message, explanation) {
-        super(message, explanation);
-        this.ind = parser.ind;
+class ParseLocation {
+    constructor(parser, ind) {
+        this.parser = parser;
+        this.ind = ind;
     }
-}
-exports.ParseError = ParseError;
-class Expected extends ParseError {
-    constructor(parser, expect, got) {
-        super(parser, `expected ${expect}, got ${got.type()}`, null);
-        this.expect = expect;
-        this.got = got;
+    advance() {
+        return new ParseLocation(this.parser, this.ind + 1);
     }
+    tok() { return this.parser.get_tok(this.ind); }
 }
-exports.Expected = Expected;
+exports.ParseLocation = ParseLocation;
 class PEG {
 }
 exports.PEG = PEG;
@@ -68,13 +79,14 @@ class Token extends PEG {
         super();
         this.type = type;
     }
-    parse(parser) {
-        let t = parser.cur_tok();
+    parse(parser, location) {
+        let t = location.tok();
         if (t.thing.type() == this.type) {
-            return pratica.Ok([parser.advance(), t.thing]);
+            return [location.advance(), t.thing];
         }
         else {
-            return pratica.Err([new diagnostics.Located(new Expected(parser, this.type, t.thing), t.span)]);
+            parser.error(location.ind, this.type);
+            return null;
         }
     }
 }
@@ -85,8 +97,17 @@ class Chain extends PEG {
         this.a = a;
         this.b = b;
     }
-    parse(parser) {
-        return (this.a.parse(parser).chain(([parser_, a_res]) => this.b.parse(parser_).chain(([parser__, b_res]) => pratica.Ok([parser__, [a_res, b_res]]))));
+    parse(parser, location) {
+        let m_a_res = this.a.parse(parser, location);
+        if (m_a_res) {
+            let [location_, a_res] = m_a_res;
+            let m_b_res = this.b.parse(parser, location_);
+            if (m_b_res) {
+                let [location__, b_res] = m_b_res;
+                return [location__, [a_res, b_res]];
+            }
+        }
+        return null;
     }
 }
 exports.Chain = Chain;
@@ -96,15 +117,18 @@ class Choice extends PEG {
         this.a = a;
         this.b = b;
     }
-    parse(parser) {
-        let a_res = this.a.parse(parser);
-        return this.a.parse(parser).cata({
-            Ok: x => pratica.Ok(x),
-            Err: a_e => this.b.parse(parser).cata({
-                Ok: x => pratica.Ok(x),
-                Err: b_e => pratica.Err(a_e.concat(b_e)),
-            }),
-        });
+    parse(parser, location) {
+        let m_a_res = this.a.parse(parser, location);
+        if (m_a_res) {
+            return m_a_res;
+        }
+        else {
+            let m_b_res = this.b.parse(parser, location);
+            if (m_b_res) {
+                return m_b_res;
+            }
+        }
+        return null;
     }
 }
 exports.Choice = Choice;
@@ -113,18 +137,17 @@ class ZeroMore extends PEG {
         super();
         this.a = a;
     }
-    parse(parser) {
+    parse(parser, location) {
         let items = [];
         while (true) {
-            let res = this.a.parse(parser);
-            let res_as_ok = res.toMaybe().value();
-            if (res_as_ok) {
-                let [parser_, item] = res_as_ok;
-                parser = parser_;
+            let m_res = this.a.parse(parser, location);
+            if (m_res) {
+                let [location_, item] = m_res;
+                location = location_;
                 items.push(item);
             }
             else {
-                return pratica.Ok([parser, items]);
+                return [location, items];
             }
         }
     }
@@ -135,19 +158,25 @@ class OneMore extends PEG {
         super();
         this.a = a;
     }
-    parse(parser) {
-        return this.a.parse(parser).chain(([parser_, first_item]) => new ZeroMore(this.a).parse(parser_).map(([parser__, more_items]) => [parser__, [first_item].concat(more_items)]));
+    parse(parser, location) {
+        return new Apply(([first, more]) => [first].concat(more), new Chain(this.a, new ZeroMore(this.a))).parse(parser, location);
     }
 }
 exports.OneMore = OneMore;
-class Map extends PEG {
+class Apply extends PEG {
     constructor(op, a) {
         super();
         this.op = op;
         this.a = a;
     }
-    parse(parser) {
-        return this.a.parse(parser).map(([parser_, a]) => [parser_, this.op(a)]);
+    parse(parser, location) {
+        let m_a_res = this.a.parse(parser, location);
+        if (m_a_res) {
+            let [location_, a_res] = m_a_res;
+            let b_res = this.op(a_res);
+            return [location_, b_res];
+        }
+        return null;
     }
 }
-exports.Map = Map;
+exports.Apply = Apply;

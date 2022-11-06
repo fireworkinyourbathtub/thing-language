@@ -27,7 +27,7 @@ export class Located<T> {
     constructor(public thing: T, public span: Span) {}
 }
 
-export abstract class Diagnostic {
+export class Diagnostic {
     constructor(public message: string, public explanation: string | null) {}
 }
 

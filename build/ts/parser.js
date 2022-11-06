@@ -24,7 +24,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parse = void 0;
-const diagnostics = __importStar(require("./diagnostics"));
 const ast = __importStar(require("./ast"));
 const peg = __importStar(require("./peg"));
 let declaration = undefined;
@@ -76,12 +75,12 @@ function astify_binary_expr([comp, ops]) {
     }
     return comp;
 }
-// hack for recursive expressions
+// hack for recursive expressions // TODO: does not actually work
 let equality;
 // function expression(): peg.PEG<ast.Expr> { return equality; }
 let expression = () => equality;
-let primary = new peg.Choice(new peg.Choice(new peg.Choice(new peg.Choice(new peg.Map(tok => new ast.Literal(tok.bool), new peg.Token('bool literal')), new peg.Map(tok => new ast.Literal(tok.num), new peg.Token('number literal'))), new peg.Map(tok => new ast.Literal(tok.str), new peg.Token('string literal'))), new peg.Map(tok => new ast.Literal(null), new peg.Token("'nil'"))), new peg.Map(([[oparen, expr], cparen]) => expr, new peg.Chain(new peg.Chain(new peg.Token("'('"), expression()), new peg.Token("')'"))));
-let unary = new peg.Choice(new peg.Map(([ops, expr]) => {
+let primary = new peg.Choice(new peg.Choice(new peg.Choice(new peg.Choice(new peg.Apply(tok => new ast.Literal(tok.bool), new peg.Token('bool literal')), new peg.Apply(tok => new ast.Literal(tok.num), new peg.Token('number literal'))), new peg.Apply(tok => new ast.Literal(tok.str), new peg.Token('string literal'))), new peg.Apply(tok => new ast.Literal(null), new peg.Token("'nil'"))), new peg.Apply(([[oparen, expr], cparen]) => expr, new peg.Chain(new peg.Chain(new peg.Token("'('"), expression()), new peg.Token("')'"))));
+let unary = new peg.Choice(new peg.Apply(([ops, expr]) => {
     let op;
     while (op = ops.shift()) {
         let op_ast;
@@ -98,21 +97,22 @@ let unary = new peg.Choice(new peg.Map(([ops, expr]) => {
     }
     return expr;
 }, new peg.Chain(new peg.OneMore(new peg.Choice(new peg.Token("'-'"), new peg.Token("'!'"))), primary)), primary);
-let factor = new peg.Map(astify_binary_expr, new peg.Chain(unary, new peg.ZeroMore(new peg.Chain(new peg.Choice(new peg.Token("'*'"), new peg.Token("'/'")), unary))));
-let term = new peg.Map(astify_binary_expr, new peg.Chain(factor, new peg.ZeroMore(new peg.Chain(new peg.Choice(new peg.Token("'+'"), new peg.Token("'-'")), factor))));
-let comparison = new peg.Map(astify_binary_expr, new peg.Chain(term, new peg.ZeroMore(new peg.Chain(new peg.Choice(new peg.Choice(new peg.Choice(new peg.Token("'<'"), new peg.Token("'<='")), new peg.Token("'>'")), new peg.Token("'>='")), term))));
+let factor = new peg.Apply(astify_binary_expr, new peg.Chain(unary, new peg.ZeroMore(new peg.Chain(new peg.Choice(new peg.Token("'*'"), new peg.Token("'/'")), unary))));
+let term = new peg.Apply(astify_binary_expr, new peg.Chain(factor, new peg.ZeroMore(new peg.Chain(new peg.Choice(new peg.Token("'+'"), new peg.Token("'-'")), factor))));
+let comparison = new peg.Apply(astify_binary_expr, new peg.Chain(term, new peg.ZeroMore(new peg.Chain(new peg.Choice(new peg.Choice(new peg.Choice(new peg.Token("'<'"), new peg.Token("'<='")), new peg.Token("'>'")), new peg.Token("'>='")), term))));
 equality =
-    new peg.Map(astify_binary_expr, new peg.Chain(comparison, new peg.ZeroMore(new peg.Chain(new peg.Choice(new peg.Token("'=='"), new peg.Token("'!='")), comparison))));
+    new peg.Apply(astify_binary_expr, new peg.Chain(comparison, new peg.ZeroMore(new peg.Chain(new peg.Choice(new peg.Token("'=='"), new peg.Token("'!='")), comparison))));
 let script = new peg.Chain(expression(), new peg.Token("eof")); //new peg.ZeroMore(declaration);
 function parse([tokens, eof]) {
-    let parser = new peg.Parser(tokens, eof, 0);
-    return script.parse(parser).cata({
-        Ok: ([_, [expr, eof]]) => expr,
-        Err: (errs) => {
-            let e = errs.reduce((max, err) => err.thing.ind > max.thing.ind ? err : max, errs[0]);
-            diagnostics.report(e);
-            return null;
-        }
-    });
+    let parser = new peg.Parser(tokens, eof);
+    let location = new peg.ParseLocation(parser, 0);
+    let res = script.parse(parser, location);
+    if (res) {
+        return res;
+    }
+    else {
+        parser.report_error();
+        return null;
+    }
 }
 exports.parse = parse;

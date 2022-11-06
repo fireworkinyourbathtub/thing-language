@@ -34,17 +34,17 @@ function astify_binary_expr([comp, ops]: [ast.Expr, [lexer.BinaryOperatorTokens,
     return comp;
 }
 
-// hack for recursive expressions
+// hack for recursive expressions // TODO: does not actually work
 let equality: peg.PEG<ast.Expr>;
 // function expression(): peg.PEG<ast.Expr> { return equality; }
 let expression: () => peg.PEG<ast.Expr> = () => equality!;
 
 let primary = new peg.Choice(new peg.Choice(new peg.Choice(new peg.Choice(
-    new peg.Map(tok => new ast.Literal(tok.bool), new peg.Token<lexer.BoolLiteral>('bool literal')),
-    new peg.Map(tok => new ast.Literal(tok.num), new peg.Token<lexer.NumberLiteral>('number literal'))),
-    new peg.Map(tok => new ast.Literal(tok.str), new peg.Token<lexer.StringLiteral>('string literal'))),
-    new peg.Map(tok => new ast.Literal(null), new peg.Token<lexer.Nil>("'nil'"))),
-    new peg.Map(([[oparen, expr], cparen]) => expr, new peg.Chain(new peg.Chain(
+    new peg.Apply(tok => new ast.Literal(tok.bool), new peg.Token<lexer.BoolLiteral>('bool literal')),
+    new peg.Apply(tok => new ast.Literal(tok.num), new peg.Token<lexer.NumberLiteral>('number literal'))),
+    new peg.Apply(tok => new ast.Literal(tok.str), new peg.Token<lexer.StringLiteral>('string literal'))),
+    new peg.Apply(tok => new ast.Literal(null), new peg.Token<lexer.Nil>("'nil'"))),
+    new peg.Apply(([[oparen, expr], cparen]) => expr, new peg.Chain(new peg.Chain(
         new peg.Token("'('"),
         expression()),
         new peg.Token("')'"),
@@ -52,7 +52,7 @@ let primary = new peg.Choice(new peg.Choice(new peg.Choice(new peg.Choice(
 
 let unary =
     new peg.Choice(
-            new peg.Map(([ops, expr]) => {
+            new peg.Apply(([ops, expr]) => {
                 let op;
                 while (op = ops.shift()) {
                     let op_ast;
@@ -73,7 +73,7 @@ let unary =
     );
 
 let factor =
-    new peg.Map(astify_binary_expr,
+    new peg.Apply(astify_binary_expr,
         new peg.Chain(
             unary,
             new peg.ZeroMore(
@@ -86,7 +86,7 @@ let factor =
     );
 
 let term =
-    new peg.Map(astify_binary_expr,
+    new peg.Apply(astify_binary_expr,
         new peg.Chain(
             factor,
             new peg.ZeroMore(
@@ -99,7 +99,7 @@ let term =
     );
 
 let comparison =
-    new peg.Map(astify_binary_expr,
+    new peg.Apply(astify_binary_expr,
         new peg.Chain(
             term,
             new peg.ZeroMore(
@@ -112,7 +112,7 @@ let comparison =
     );
 
 equality =
-    new peg.Map(astify_binary_expr,
+    new peg.Apply(astify_binary_expr,
         new peg.Chain(
             comparison,
             new peg.ZeroMore(
@@ -127,13 +127,14 @@ equality =
 let script = new peg.Chain(expression(), new peg.Token("eof")); //new peg.ZeroMore(declaration);
 
 export function parse([tokens, eof]: [diagnostics.Located<lexer.Token>[], diagnostics.Located<lexer.EOF>]): ast.Expr | null {
-    let parser = new peg.Parser(tokens, eof, 0);
-    return script.parse(parser).cata({
-        Ok: ([_, [expr, eof]]) => expr,
-        Err: (errs) => {
-            let e = errs.reduce((max, err) => err.thing.ind > max.thing.ind ? err : max, errs[0]);
-            diagnostics.report(e);
-            return null;
-        }
-    });
+    let parser = new peg.Parser(tokens, eof);
+    let location = new peg.ParseLocation(parser, 0);
+
+    let res = script.parse(parser, location);
+    if (res) {
+        return res;
+    } else {
+        parser.report_error();
+        return null;
+    }
 }
