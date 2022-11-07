@@ -67,23 +67,23 @@ export class VarStmt extends Stmt {
     constructor(public name: string, public initializer: Expr | null) { super() }
 }
 export class BlockStmt extends Stmt {
-    constructor(stmts: Stmt[]) { super() }
+    constructor(public stmts: Stmt[]) { super() }
 }
 // export class ClassStmt extends Stmt {
     // constructor(name: string, List<Stmt.Function> methods) { super() }
 // }
 export class FunctionStmt extends Stmt {
-    constructor(name: string, param: string[], body: BlockStmt) { super() }
+    constructor(public name: string, public param: string[], public body: BlockStmt) { super() }
 }
 export class ForStmt extends Stmt {
-    constructor(initializer: Stmt | null, compare: Expr | null, increment: Expr | null, body: Stmt) { super() }
+    constructor(public initializer: Stmt | null, public compare: Expr | null, public increment: Expr | null, public body: Stmt) { super() }
 }
 export class IfStmt extends Stmt {
-    constructor(condition: Expr, then_branch: Stmt, else_branch: Stmt | null) { super() }
+    constructor(public condition: Expr, public then_branch: Stmt, public else_branch: Stmt | null) { super() }
 }
 export class ReturnStmt extends Stmt {
-    constructor(value: Expr | null) { super() }
+    constructor(public value: Expr | null) { super() }
 }
 export class WhileStmt extends Stmt {
-    constructor(condition: Expr, body: Stmt) { super() }
+    constructor(public condition: Expr, public body: Stmt) { super() }
 }

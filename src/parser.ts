@@ -32,7 +32,7 @@ function astify_binary_expr([comp, ops]: [ast.Expr, [lexer.BinaryOperatorTokens,
     return comp;
 }
 
-let block: peg.PEG<ast.Stmt>;
+let block: peg.PEG<ast.BlockStmt>;
 let expression: peg.PEG<ast.Expr>;
 let expression_indirect = () => expression!;
 

@@ -141,29 +141,55 @@ class VarStmt extends Stmt {
 }
 exports.VarStmt = VarStmt;
 class BlockStmt extends Stmt {
-    constructor(stmts) { super(); }
+    constructor(stmts) {
+        super();
+        this.stmts = stmts;
+    }
 }
 exports.BlockStmt = BlockStmt;
 // export class ClassStmt extends Stmt {
 // constructor(name: string, List<Stmt.Function> methods) { super() }
 // }
 class FunctionStmt extends Stmt {
-    constructor(name, param, body) { super(); }
+    constructor(name, param, body) {
+        super();
+        this.name = name;
+        this.param = param;
+        this.body = body;
+    }
 }
 exports.FunctionStmt = FunctionStmt;
 class ForStmt extends Stmt {
-    constructor(initializer, compare, increment, body) { super(); }
+    constructor(initializer, compare, increment, body) {
+        super();
+        this.initializer = initializer;
+        this.compare = compare;
+        this.increment = increment;
+        this.body = body;
+    }
 }
 exports.ForStmt = ForStmt;
 class IfStmt extends Stmt {
-    constructor(condition, then_branch, else_branch) { super(); }
+    constructor(condition, then_branch, else_branch) {
+        super();
+        this.condition = condition;
+        this.then_branch = then_branch;
+        this.else_branch = else_branch;
+    }
 }
 exports.IfStmt = IfStmt;
 class ReturnStmt extends Stmt {
-    constructor(value) { super(); }
+    constructor(value) {
+        super();
+        this.value = value;
+    }
 }
 exports.ReturnStmt = ReturnStmt;
 class WhileStmt extends Stmt {
-    constructor(condition, body) { super(); }
+    constructor(condition, body) {
+        super();
+        this.condition = condition;
+        this.body = body;
+    }
 }
 exports.WhileStmt = WhileStmt;
