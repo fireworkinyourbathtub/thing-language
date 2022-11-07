@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Apply = exports.OneMore = exports.ZeroMore = exports.Choice = exports.Chain = exports.Token = exports.PEG = exports.ParseLocation = exports.Parser = void 0;
+exports.Indirect = exports.Apply = exports.OneMore = exports.ZeroMore = exports.Choice = exports.Chain = exports.Token = exports.PEG = exports.ParseLocation = exports.Parser = void 0;
 const diagnostics = __importStar(require("./diagnostics"));
 class Parser {
     constructor(tokens, eof) {
@@ -180,3 +180,13 @@ class Apply extends PEG {
     }
 }
 exports.Apply = Apply;
+class Indirect extends PEG {
+    constructor(thing) {
+        super();
+        this.thing = thing;
+    }
+    parse(parser, location) {
+        return this.thing().parse(parser, location);
+    }
+}
+exports.Indirect = Indirect;

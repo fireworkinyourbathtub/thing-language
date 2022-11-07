@@ -75,11 +75,10 @@ function astify_binary_expr([comp, ops]) {
     }
     return comp;
 }
-// hack for recursive expressions // TODO: does not actually work
+// hack for recursive expressions
 let equality;
-// function expression(): peg.PEG<ast.Expr> { return equality; }
 let expression = () => equality;
-let primary = new peg.Choice(new peg.Choice(new peg.Choice(new peg.Choice(new peg.Apply(tok => new ast.Literal(tok.bool), new peg.Token('bool literal')), new peg.Apply(tok => new ast.Literal(tok.num), new peg.Token('number literal'))), new peg.Apply(tok => new ast.Literal(tok.str), new peg.Token('string literal'))), new peg.Apply(tok => new ast.Literal(null), new peg.Token("'nil'"))), new peg.Apply(([[oparen, expr], cparen]) => expr, new peg.Chain(new peg.Chain(new peg.Token("'('"), expression()), new peg.Token("')'"))));
+let primary = new peg.Choice(new peg.Choice(new peg.Choice(new peg.Choice(new peg.Apply(tok => new ast.Literal(tok.bool), new peg.Token('bool literal')), new peg.Apply(tok => new ast.Literal(tok.num), new peg.Token('number literal'))), new peg.Apply(tok => new ast.Literal(tok.str), new peg.Token('string literal'))), new peg.Apply(tok => new ast.Literal(null), new peg.Token("'nil'"))), new peg.Apply(([[oparen, expr], cparen]) => expr, new peg.Chain(new peg.Chain(new peg.Token("'('"), new peg.Indirect(expression)), new peg.Token("')'"))));
 let unary = new peg.Choice(new peg.Apply(([ops, expr]) => {
     let op;
     while (op = ops.shift()) {
@@ -102,13 +101,13 @@ let term = new peg.Apply(astify_binary_expr, new peg.Chain(factor, new peg.ZeroM
 let comparison = new peg.Apply(astify_binary_expr, new peg.Chain(term, new peg.ZeroMore(new peg.Chain(new peg.Choice(new peg.Choice(new peg.Choice(new peg.Token("'<'"), new peg.Token("'<='")), new peg.Token("'>'")), new peg.Token("'>='")), term))));
 equality =
     new peg.Apply(astify_binary_expr, new peg.Chain(comparison, new peg.ZeroMore(new peg.Chain(new peg.Choice(new peg.Token("'=='"), new peg.Token("'!='")), comparison))));
-let script = new peg.Chain(expression(), new peg.Token("eof")); //new peg.ZeroMore(declaration);
+let script = new peg.Chain(new peg.Indirect(expression), new peg.Token("eof")); //new peg.ZeroMore(declaration);
 function parse([tokens, eof]) {
     let parser = new peg.Parser(tokens, eof);
     let location = new peg.ParseLocation(parser, 0);
     let res = script.parse(parser, location);
     if (res) {
-        return res;
+        return res[1];
     }
     else {
         parser.report_error();

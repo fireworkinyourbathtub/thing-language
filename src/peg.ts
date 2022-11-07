@@ -152,3 +152,10 @@ export class Apply<A, B> extends PEG<B> {
         return null;
     }
 }
+
+export class Indirect<T> extends PEG<T> {
+    constructor(private thing: () => PEG<T>) { super(); }
+    parse(parser: Parser, location: ParseLocation): [ParseLocation, T] | null {
+        return this.thing().parse(parser, location);
+    }
+}

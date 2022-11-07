@@ -34,10 +34,9 @@ function astify_binary_expr([comp, ops]: [ast.Expr, [lexer.BinaryOperatorTokens,
     return comp;
 }
 
-// hack for recursive expressions // TODO: does not actually work
+// hack for recursive expressions
 let equality: peg.PEG<ast.Expr>;
-// function expression(): peg.PEG<ast.Expr> { return equality; }
-let expression: () => peg.PEG<ast.Expr> = () => equality!;
+let expression = () => equality!;
 
 let primary = new peg.Choice(new peg.Choice(new peg.Choice(new peg.Choice(
     new peg.Apply(tok => new ast.Literal(tok.bool), new peg.Token<lexer.BoolLiteral>('bool literal')),
@@ -46,7 +45,7 @@ let primary = new peg.Choice(new peg.Choice(new peg.Choice(new peg.Choice(
     new peg.Apply(tok => new ast.Literal(null), new peg.Token<lexer.Nil>("'nil'"))),
     new peg.Apply(([[oparen, expr], cparen]) => expr, new peg.Chain(new peg.Chain(
         new peg.Token("'('"),
-        expression()),
+        new peg.Indirect(expression)),
         new peg.Token("')'"),
     )));
 
@@ -124,7 +123,7 @@ equality =
         )
     );
 
-let script = new peg.Chain(expression(), new peg.Token("eof")); //new peg.ZeroMore(declaration);
+let script = new peg.Chain(new peg.Indirect(expression), new peg.Token("eof")); //new peg.ZeroMore(declaration);
 
 export function parse([tokens, eof]: [diagnostics.Located<lexer.Token>[], diagnostics.Located<lexer.EOF>]): ast.Expr | null {
     let parser = new peg.Parser(tokens, eof);
@@ -132,7 +131,7 @@ export function parse([tokens, eof]: [diagnostics.Located<lexer.Token>[], diagno
 
     let res = script.parse(parser, location);
     if (res) {
-        return res;
+        return res[1];
     } else {
         parser.report_error();
         return null;
