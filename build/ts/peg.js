@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Indirect = exports.Apply = exports.OneMore = exports.ZeroMore = exports.Choice = exports.Chain = exports.Token = exports.PEG = exports.ParseLocation = exports.Parser = void 0;
+exports.Indirect = exports.Apply = exports.OneMore = exports.ZeroMore = exports.Optional = exports.Choice = exports.Chain = exports.Token = exports.PEG = exports.ParseLocation = exports.Parser = void 0;
 const diagnostics = __importStar(require("./diagnostics"));
 class Parser {
     constructor(tokens, eof) {
@@ -72,6 +72,16 @@ class ParseLocation {
 }
 exports.ParseLocation = ParseLocation;
 class PEG {
+    // convenience methods
+    chain(other) {
+        return new Chain(this, other);
+    }
+    choice(other) {
+        return new Choice(this, other);
+    }
+    apply(op) {
+        return new Apply(op, this);
+    }
 }
 exports.PEG = PEG;
 class Token extends PEG {
@@ -132,6 +142,23 @@ class Choice extends PEG {
     }
 }
 exports.Choice = Choice;
+class Optional extends PEG {
+    constructor(a) {
+        super();
+        this.a = a;
+    }
+    parse(parser, location) {
+        let m_a_res = this.a.parse(parser, location);
+        if (m_a_res) {
+            let [location_, a_res] = m_a_res;
+            return [location_, a_res];
+        }
+        else {
+            return [location, null];
+        }
+    }
+}
+exports.Optional = Optional;
 class ZeroMore extends PEG {
     constructor(a) {
         super();

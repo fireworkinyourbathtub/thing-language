@@ -55,6 +55,19 @@ export class ParseLocation {
 
 export abstract class PEG<T> {
     abstract parse(parser: Parser, location: ParseLocation): [ParseLocation, T] | null;
+
+    // convenience methods
+    chain<B>(other: PEG<B>): PEG<[T, B]> {
+        return new Chain(this, other);
+    }
+
+    choice<B>(other: PEG<B>): PEG<T | B> {
+        return new Choice(this, other);
+    }
+
+    apply<B>(op: (t: T) => B): PEG<B> {
+        return new Apply(op, this);
+    }
 }
 
 export class Token<T extends lexer.Token> extends PEG<T> {
@@ -106,6 +119,20 @@ export class Choice<A, B> extends PEG<A | B> {
         }
 
         return null;
+    }
+}
+
+export class Optional<A> extends PEG<A | null> {
+    constructor(private a: PEG<A>) { super(); }
+
+    parse(parser: Parser, location: ParseLocation): [ParseLocation, A | null] | null {
+        let m_a_res = this.a.parse(parser, location);
+        if (m_a_res) {
+            let [location_, a_res] = m_a_res;
+            return [location_, a_res];
+        } else {
+            return [location, null];
+        }
     }
 }
 
