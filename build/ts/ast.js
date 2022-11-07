@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WhileStmt = exports.ReturnStmt = exports.IfStmt = exports.ForStmt = exports.FunctionStmt = exports.BlockStmt = exports.VarDecl = exports.PrintStmt = exports.ExprStmt = exports.Stmt = exports.ThisExpr = exports.SetExpr = exports.LogicalExpr = exports.GetExpr = exports.CallExpr = exports.AssignExpr = exports.Literal = exports.VarExpr = exports.UnaryExpr = exports.BinaryExpr = exports.LogicalOperator = exports.UnaryOperator = exports.BinaryOperator = exports.Expr = exports.AST = void 0;
+exports.WhileStmt = exports.ReturnStmt = exports.IfStmt = exports.ForStmt = exports.FunctionStmt = exports.BlockStmt = exports.VarStmt = exports.PrintStmt = exports.ExprStmt = exports.Stmt = exports.ThisExpr = exports.SetExpr = exports.LogicalExpr = exports.GetExpr = exports.CallExpr = exports.AssignExpr = exports.Literal = exports.VarExpr = exports.UnaryExpr = exports.BinaryExpr = exports.LogicalOperator = exports.UnaryOperator = exports.BinaryOperator = exports.Expr = exports.AST = void 0;
 class AST {
+    thing() { }
 }
 exports.AST = AST;
 class Expr extends AST {
@@ -131,14 +132,14 @@ class PrintStmt extends Stmt {
     }
 }
 exports.PrintStmt = PrintStmt;
-class VarDecl extends Stmt {
+class VarStmt extends Stmt {
     constructor(name, initializer) {
         super();
         this.name = name;
         this.initializer = initializer;
     }
 }
-exports.VarDecl = VarDecl;
+exports.VarStmt = VarStmt;
 class BlockStmt extends Stmt {
     constructor(stmts) { super(); }
 }

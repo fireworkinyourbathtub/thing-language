@@ -1,6 +1,6 @@
 import * as lexer from './lexer';
 
-export abstract class AST {}
+export abstract class AST { thing() {} }
 
 export abstract class Expr extends AST {}
 
@@ -63,7 +63,7 @@ export class ExprStmt extends Stmt {
 export class PrintStmt extends Stmt {
     constructor(public expr: Expr) { super() }
 }
-export class VarDecl extends Stmt {
+export class VarStmt extends Stmt {
     constructor(public name: string, public initializer: Expr | null) { super() }
 }
 export class BlockStmt extends Stmt {
@@ -73,16 +73,16 @@ export class BlockStmt extends Stmt {
     // constructor(name: string, List<Stmt.Function> methods) { super() }
 // }
 export class FunctionStmt extends Stmt {
-    constructor(name: string, param: string[], body: Stmt[]) { super() }
+    constructor(name: string, param: string[], body: BlockStmt) { super() }
 }
 export class ForStmt extends Stmt {
-    constructor(initializer: Stmt, compare: Expr, increment: Expr, body: Stmt[]) { super() }
+    constructor(initializer: Stmt | null, compare: Expr | null, increment: Expr | null, body: Stmt) { super() }
 }
 export class IfStmt extends Stmt {
-    constructor(condition: Expr, then_branch: Stmt, else_branch: Stmt) { super() }
+    constructor(condition: Expr, then_branch: Stmt, else_branch: Stmt | null) { super() }
 }
 export class ReturnStmt extends Stmt {
-    constructor(value: Expr) { super() }
+    constructor(value: Expr | null) { super() }
 }
 export class WhileStmt extends Stmt {
     constructor(condition: Expr, body: Stmt) { super() }
