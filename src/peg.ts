@@ -21,9 +21,9 @@ export class Parser {
 
         let explanation;
         if (es.length == 1) {
-            explanation = `expected ${es[0]}, got ${got.thing.type()}`;
+            explanation = `expected ${es[0]}, got ${got.thing.type}`;
         } else {
-            explanation = `expected one of ${es}, got ${got.thing.type()}`;
+            explanation = `expected one of ${es}, got ${got.thing.type}`;
         }
 
         diagnostics.report(
@@ -77,7 +77,7 @@ export class Token<T extends lexer.Token> extends PEG<T> {
 
     parse(parser: Parser, location: ParseLocation): [ParseLocation, T] | null {
         let t = location.tok();
-        if (t.thing.type() == this.type) {
+        if (t.thing.type == this.type) {
             return [location.advance(), t.thing as T];
         } else {
             parser.error(location.ind, this.type);

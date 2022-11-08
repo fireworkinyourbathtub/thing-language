@@ -32,7 +32,7 @@ function astify_binary_expr([comp, ops]) {
     while (cur = ops.shift()) {
         let [op, right] = cur;
         let op_ast;
-        switch (op.type()) {
+        switch (op.type) {
             case "'+'":
                 op_ast = ast.BinaryOperator.Plus;
                 break;
@@ -105,7 +105,7 @@ let unary;
 unary =
     (new peg.Token("'-'").choice(new peg.Token("'!'"))).chain(new peg.Indirect(() => unary)).apply(([op, expr]) => {
         let op_ast;
-        switch (op.type()) {
+        switch (op.type) {
             case "'-'":
                 op_ast = ast.UnaryOperator.Minus;
                 break;

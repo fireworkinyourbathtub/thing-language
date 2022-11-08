@@ -11,70 +11,70 @@ export type TokenType =
 export type BinaryOperatorTokens = Plus | Minus | Star | Slash | Less | Equal | Greater | Bang | LessEqual | EqualEqual | GreaterEqual | BangEqual;
 
 export abstract class Token {
-    abstract type(): TokenType;
+    abstract readonly type: TokenType;
 }
 
-export class OParen extends Token { type(): TokenType { return "'('"; } }
-export class CParen extends Token { type(): TokenType { return "')'"; } }
-export class Comma extends Token { type(): TokenType { return "','"; } }
-export class Dot extends Token { type(): TokenType { return "'.'"; } }
-export class Plus extends Token { type(): TokenType { return "'+'"; } }
-export class Minus extends Token { type(): TokenType { return "'-'"; } }
-export class Star extends Token { type(): TokenType { return "'*'"; } }
-export class Slash extends Token { type(): TokenType { return "'/'"; } }
+export class OParen extends Token { readonly type: TokenType = "'('"; }
+export class CParen extends Token { readonly type: TokenType = "')'"; }
+export class Comma extends Token { readonly type: TokenType = "','"; }
+export class Dot extends Token { readonly type: TokenType = "'.'"; }
+export class Plus extends Token { readonly type: TokenType = "'+'"; }
+export class Minus extends Token { readonly type: TokenType = "'-'"; }
+export class Star extends Token { readonly type: TokenType = "'*'"; }
+export class Slash extends Token { readonly type: TokenType = "'/'"; }
 
-export class OBrace extends Token { type(): TokenType { return "'{'"; } }
-export class CBrace extends Token { type(): TokenType { return "'}'"; } }
-export class Semicolon extends Token { type(): TokenType { return "';'"; } }
+export class OBrace extends Token { readonly type: TokenType = "'{'"; }
+export class CBrace extends Token { readonly type: TokenType = "'}'"; }
+export class Semicolon extends Token { readonly type: TokenType = "';'"; }
 
-export class Less extends Token { type(): TokenType { return "'<'"; } }
-export class Equal extends Token { type(): TokenType { return "'='"; } }
-export class Greater extends Token { type(): TokenType { return "'>'"; } }
-export class Bang extends Token { type(): TokenType { return "'!'"; } }
-export class LessEqual extends Token { type(): TokenType { return "'<='"; } }
-export class EqualEqual extends Token { type(): TokenType { return "'=='"; } }
-export class GreaterEqual extends Token { type(): TokenType { return "'>='"; } }
-export class BangEqual extends Token { type(): TokenType { return "'!='"; } }
+export class Less extends Token { readonly type: TokenType = "'<'"; }
+export class Equal extends Token { readonly type: TokenType = "'='"; }
+export class Greater extends Token { readonly type: TokenType = "'>'"; }
+export class Bang extends Token { readonly type: TokenType = "'!'"; }
+export class LessEqual extends Token { readonly type: TokenType = "'<='"; }
+export class EqualEqual extends Token { readonly type: TokenType = "'=='"; }
+export class GreaterEqual extends Token { readonly type: TokenType = "'>='"; }
+export class BangEqual extends Token { readonly type: TokenType = "'!='"; }
 
-export class And extends Token { type(): TokenType { return "'and'"; } }
-export class Class extends Token { type(): TokenType { return "'class'"; } }
-export class Else extends Token { type(): TokenType { return "'else'"; } }
-export class For extends Token { type(): TokenType { return "'for'"; } }
-export class Fun extends Token { type(): TokenType { return "'fun'"; } }
-export class If extends Token { type(): TokenType { return "'if'"; } }
-export class Nil extends Token { type(): TokenType { return "'nil'"; } }
-export class Or extends Token { type(): TokenType { return "'or'"; } }
-export class Print extends Token { type(): TokenType { return "'print'"; } }
-export class Return extends Token { type(): TokenType { return "'return'"; } }
-export class Super extends Token { type(): TokenType { return "'super'"; } }
-export class This extends Token { type(): TokenType { return "'this'"; } }
-export class Var extends Token { type(): TokenType { return "'var'"; } }
-export class While extends Token { type(): TokenType { return "'while'"; } }
+export class And extends Token { readonly type: TokenType = "'and'"; }
+export class Class extends Token { readonly type: TokenType = "'class'"; }
+export class Else extends Token { readonly type: TokenType = "'else'"; }
+export class For extends Token { readonly type: TokenType = "'for'"; }
+export class Fun extends Token { readonly type: TokenType = "'fun'"; }
+export class If extends Token { readonly type: TokenType = "'if'"; }
+export class Nil extends Token { readonly type: TokenType = "'nil'"; }
+export class Or extends Token { readonly type: TokenType = "'or'"; }
+export class Print extends Token { readonly type: TokenType = "'print'"; }
+export class Return extends Token { readonly type: TokenType = "'return'"; }
+export class Super extends Token { readonly type: TokenType = "'super'"; }
+export class This extends Token { readonly type: TokenType = "'this'"; }
+export class Var extends Token { readonly type: TokenType = "'var'"; }
+export class While extends Token { readonly type: TokenType = "'while'"; }
 
 export class Identifier extends Token {
     constructor(public name: string) { super(); }
 
-    type(): TokenType { return "identifier"; }
+    readonly type: TokenType = "identifier";
 }
 
 export class StringLiteral extends Token {
     constructor(public str: string) { super(); }
 
-    type(): TokenType { return "string literal"; }
+    readonly type: TokenType = "string literal";
 }
 export class NumberLiteral extends Token {
     constructor(public num: number) { super(); }
 
-    type(): TokenType { return "number literal"; }
+    readonly type: TokenType = "number literal";
 }
 
 export class BoolLiteral extends Token {
     constructor(public bool: boolean) { super(); }
 
-    type(): TokenType { return "bool literal"; }
+    readonly type: TokenType = "bool literal";
 }
 
-export class EOF extends Token { type(): TokenType { return "eof"; } }
+export class EOF extends Token { readonly type: TokenType = "eof"; }
 
 class BadCharacter extends diagnostics.Diagnostic {
     constructor(public ch: string) { super(`bad character: ${ch}`, null); }

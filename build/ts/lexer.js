@@ -29,171 +29,273 @@ class Token {
 }
 exports.Token = Token;
 class OParen extends Token {
-    type() { return "'('"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'('";
+    }
 }
 exports.OParen = OParen;
 class CParen extends Token {
-    type() { return "')'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "')'";
+    }
 }
 exports.CParen = CParen;
 class Comma extends Token {
-    type() { return "','"; }
+    constructor() {
+        super(...arguments);
+        this.type = "','";
+    }
 }
 exports.Comma = Comma;
 class Dot extends Token {
-    type() { return "'.'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'.'";
+    }
 }
 exports.Dot = Dot;
 class Plus extends Token {
-    type() { return "'+'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'+'";
+    }
 }
 exports.Plus = Plus;
 class Minus extends Token {
-    type() { return "'-'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'-'";
+    }
 }
 exports.Minus = Minus;
 class Star extends Token {
-    type() { return "'*'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'*'";
+    }
 }
 exports.Star = Star;
 class Slash extends Token {
-    type() { return "'/'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'/'";
+    }
 }
 exports.Slash = Slash;
 class OBrace extends Token {
-    type() { return "'{'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'{'";
+    }
 }
 exports.OBrace = OBrace;
 class CBrace extends Token {
-    type() { return "'}'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'}'";
+    }
 }
 exports.CBrace = CBrace;
 class Semicolon extends Token {
-    type() { return "';'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "';'";
+    }
 }
 exports.Semicolon = Semicolon;
 class Less extends Token {
-    type() { return "'<'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'<'";
+    }
 }
 exports.Less = Less;
 class Equal extends Token {
-    type() { return "'='"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'='";
+    }
 }
 exports.Equal = Equal;
 class Greater extends Token {
-    type() { return "'>'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'>'";
+    }
 }
 exports.Greater = Greater;
 class Bang extends Token {
-    type() { return "'!'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'!'";
+    }
 }
 exports.Bang = Bang;
 class LessEqual extends Token {
-    type() { return "'<='"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'<='";
+    }
 }
 exports.LessEqual = LessEqual;
 class EqualEqual extends Token {
-    type() { return "'=='"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'=='";
+    }
 }
 exports.EqualEqual = EqualEqual;
 class GreaterEqual extends Token {
-    type() { return "'>='"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'>='";
+    }
 }
 exports.GreaterEqual = GreaterEqual;
 class BangEqual extends Token {
-    type() { return "'!='"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'!='";
+    }
 }
 exports.BangEqual = BangEqual;
 class And extends Token {
-    type() { return "'and'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'and'";
+    }
 }
 exports.And = And;
 class Class extends Token {
-    type() { return "'class'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'class'";
+    }
 }
 exports.Class = Class;
 class Else extends Token {
-    type() { return "'else'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'else'";
+    }
 }
 exports.Else = Else;
 class For extends Token {
-    type() { return "'for'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'for'";
+    }
 }
 exports.For = For;
 class Fun extends Token {
-    type() { return "'fun'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'fun'";
+    }
 }
 exports.Fun = Fun;
 class If extends Token {
-    type() { return "'if'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'if'";
+    }
 }
 exports.If = If;
 class Nil extends Token {
-    type() { return "'nil'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'nil'";
+    }
 }
 exports.Nil = Nil;
 class Or extends Token {
-    type() { return "'or'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'or'";
+    }
 }
 exports.Or = Or;
 class Print extends Token {
-    type() { return "'print'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'print'";
+    }
 }
 exports.Print = Print;
 class Return extends Token {
-    type() { return "'return'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'return'";
+    }
 }
 exports.Return = Return;
 class Super extends Token {
-    type() { return "'super'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'super'";
+    }
 }
 exports.Super = Super;
 class This extends Token {
-    type() { return "'this'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'this'";
+    }
 }
 exports.This = This;
 class Var extends Token {
-    type() { return "'var'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'var'";
+    }
 }
 exports.Var = Var;
 class While extends Token {
-    type() { return "'while'"; }
+    constructor() {
+        super(...arguments);
+        this.type = "'while'";
+    }
 }
 exports.While = While;
 class Identifier extends Token {
     constructor(name) {
         super();
         this.name = name;
+        this.type = "identifier";
     }
-    type() { return "identifier"; }
 }
 exports.Identifier = Identifier;
 class StringLiteral extends Token {
     constructor(str) {
         super();
         this.str = str;
+        this.type = "string literal";
     }
-    type() { return "string literal"; }
 }
 exports.StringLiteral = StringLiteral;
 class NumberLiteral extends Token {
     constructor(num) {
         super();
         this.num = num;
+        this.type = "number literal";
     }
-    type() { return "number literal"; }
 }
 exports.NumberLiteral = NumberLiteral;
 class BoolLiteral extends Token {
     constructor(bool) {
         super();
         this.bool = bool;
+        this.type = "bool literal";
     }
-    type() { return "bool literal"; }
 }
 exports.BoolLiteral = BoolLiteral;
 class EOF extends Token {
-    type() { return "eof"; }
+    constructor() {
+        super(...arguments);
+        this.type = "eof";
+    }
 }
 exports.EOF = EOF;
 class BadCharacter extends diagnostics.Diagnostic {

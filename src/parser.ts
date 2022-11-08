@@ -9,7 +9,7 @@ function astify_binary_expr([comp, ops]: [ast.Expr, [lexer.BinaryOperatorTokens,
         let [op, right] = cur;
 
         let op_ast;
-        switch (op.type()) {
+        switch (op.type) {
             case  "'+'": op_ast = ast.BinaryOperator.Plus; break;
             case  "'-'": op_ast = ast.BinaryOperator.Minus; break;
             case  "'*'": op_ast = ast.BinaryOperator.Star; break;
@@ -75,7 +75,7 @@ let unary: peg.PEG<ast.Expr>;
 unary =
     (new peg.Token("'-'").choice(new peg.Token("'!'"))).chain(new peg.Indirect(() => unary!)).apply(([op, expr]) => {
         let op_ast;
-        switch (op.type()) {
+        switch (op.type) {
             case "'-'": op_ast = ast.UnaryOperator.Minus; break;
             case "'!'": op_ast = ast.UnaryOperator.Bang; break;
             default: throw Error('unreachable');
