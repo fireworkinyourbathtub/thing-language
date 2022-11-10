@@ -43,10 +43,10 @@ let fn: peg.PEG<[lexer.Identifier, lexer.Identifier[], ast.BlockStmt]> =
     .apply(([[[[identifier, oparen], params], cparen], block]) => [identifier, params ? params : [], block]);
 
 let primary: peg.PEG<ast.Expr> =
-    new peg.Token<lexer.BoolLiteral>('bool literal').apply(tok => new ast.Literal(tok.bool)).choice(
-    new peg.Token<lexer.Nil>("'nil'").apply(tok => new ast.Literal(null))).choice(
-    new peg.Token<lexer.NumberLiteral>('number literal').apply(tok => new ast.Literal(tok.num))).choice(
-    new peg.Token<lexer.StringLiteral>('string literal').apply(tok => new ast.Literal(tok.str))).choice(
+    new peg.Token<lexer.BoolLiteral>('bool literal').apply(tok => new ast.BoolLiteral(tok.bool)).choice(
+    new peg.Token<lexer.Nil>("'nil'").apply(tok => new ast.NilLiteral())).choice(
+    new peg.Token<lexer.NumberLiteral>('number literal').apply(tok => new ast.NumberLiteral(tok.num))).choice(
+    new peg.Token<lexer.StringLiteral>('string literal').apply(tok => new ast.StringLiteral(tok.str))).choice(
     new peg.Token<lexer.Identifier>("identifier").apply(ident => new ast.VarExpr(ident.name))).choice(
     new peg.Token("'('").chain(new peg.Indirect(expression_indirect)).chain(new peg.Token("')'")).apply(([[oparen, expr], cparen]) => expr));
 
