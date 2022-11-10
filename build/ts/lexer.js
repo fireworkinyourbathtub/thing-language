@@ -23,289 +23,249 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.lex = exports.EOF = exports.BoolLiteral = exports.NumberLiteral = exports.StringLiteral = exports.Identifier = exports.While = exports.Var = exports.This = exports.Super = exports.Return = exports.Print = exports.Or = exports.Nil = exports.If = exports.Fun = exports.For = exports.Else = exports.Class = exports.And = exports.BangEqual = exports.GreaterEqual = exports.EqualEqual = exports.LessEqual = exports.Bang = exports.Greater = exports.Equal = exports.Less = exports.Semicolon = exports.CBrace = exports.OBrace = exports.Slash = exports.Star = exports.Minus = exports.Plus = exports.Dot = exports.Comma = exports.CParen = exports.OParen = exports.Token = void 0;
+exports.lex = exports.EOF = exports.BoolLiteral = exports.NumberLiteral = exports.StringLiteral = exports.Identifier = exports.While = exports.Var = exports.This = exports.Super = exports.Return = exports.Print = exports.Or = exports.Nil = exports.If = exports.Fun = exports.For = exports.Else = exports.Class = exports.And = exports.BangEqual = exports.GreaterEqual = exports.EqualEqual = exports.LessEqual = exports.Bang = exports.Greater = exports.Equal = exports.Less = exports.Semicolon = exports.CBrace = exports.OBrace = exports.Slash = exports.Star = exports.Minus = exports.Plus = exports.Dot = exports.Comma = exports.CParen = exports.OParen = void 0;
 const diagnostics = __importStar(require("./diagnostics"));
-class Token {
-}
-exports.Token = Token;
-class OParen extends Token {
+class OParen {
     constructor() {
-        super(...arguments);
         this.type = "'('";
     }
 }
 exports.OParen = OParen;
-class CParen extends Token {
+class CParen {
     constructor() {
-        super(...arguments);
         this.type = "')'";
     }
 }
 exports.CParen = CParen;
-class Comma extends Token {
+class Comma {
     constructor() {
-        super(...arguments);
         this.type = "','";
     }
 }
 exports.Comma = Comma;
-class Dot extends Token {
+class Dot {
     constructor() {
-        super(...arguments);
         this.type = "'.'";
     }
 }
 exports.Dot = Dot;
-class Plus extends Token {
+class Plus {
     constructor() {
-        super(...arguments);
         this.type = "'+'";
     }
 }
 exports.Plus = Plus;
-class Minus extends Token {
+class Minus {
     constructor() {
-        super(...arguments);
         this.type = "'-'";
     }
 }
 exports.Minus = Minus;
-class Star extends Token {
+class Star {
     constructor() {
-        super(...arguments);
         this.type = "'*'";
     }
 }
 exports.Star = Star;
-class Slash extends Token {
+class Slash {
     constructor() {
-        super(...arguments);
         this.type = "'/'";
     }
 }
 exports.Slash = Slash;
-class OBrace extends Token {
+class OBrace {
     constructor() {
-        super(...arguments);
         this.type = "'{'";
     }
 }
 exports.OBrace = OBrace;
-class CBrace extends Token {
+class CBrace {
     constructor() {
-        super(...arguments);
         this.type = "'}'";
     }
 }
 exports.CBrace = CBrace;
-class Semicolon extends Token {
+class Semicolon {
     constructor() {
-        super(...arguments);
         this.type = "';'";
     }
 }
 exports.Semicolon = Semicolon;
-class Less extends Token {
+class Less {
     constructor() {
-        super(...arguments);
         this.type = "'<'";
     }
 }
 exports.Less = Less;
-class Equal extends Token {
+class Equal {
     constructor() {
-        super(...arguments);
         this.type = "'='";
     }
 }
 exports.Equal = Equal;
-class Greater extends Token {
+class Greater {
     constructor() {
-        super(...arguments);
         this.type = "'>'";
     }
 }
 exports.Greater = Greater;
-class Bang extends Token {
+class Bang {
     constructor() {
-        super(...arguments);
         this.type = "'!'";
     }
 }
 exports.Bang = Bang;
-class LessEqual extends Token {
+class LessEqual {
     constructor() {
-        super(...arguments);
         this.type = "'<='";
     }
 }
 exports.LessEqual = LessEqual;
-class EqualEqual extends Token {
+class EqualEqual {
     constructor() {
-        super(...arguments);
         this.type = "'=='";
     }
 }
 exports.EqualEqual = EqualEqual;
-class GreaterEqual extends Token {
+class GreaterEqual {
     constructor() {
-        super(...arguments);
         this.type = "'>='";
     }
 }
 exports.GreaterEqual = GreaterEqual;
-class BangEqual extends Token {
+class BangEqual {
     constructor() {
-        super(...arguments);
         this.type = "'!='";
     }
 }
 exports.BangEqual = BangEqual;
-class And extends Token {
+class And {
     constructor() {
-        super(...arguments);
         this.type = "'and'";
     }
 }
 exports.And = And;
-class Class extends Token {
+class Class {
     constructor() {
-        super(...arguments);
         this.type = "'class'";
     }
 }
 exports.Class = Class;
-class Else extends Token {
+class Else {
     constructor() {
-        super(...arguments);
         this.type = "'else'";
     }
 }
 exports.Else = Else;
-class For extends Token {
+class For {
     constructor() {
-        super(...arguments);
         this.type = "'for'";
     }
 }
 exports.For = For;
-class Fun extends Token {
+class Fun {
     constructor() {
-        super(...arguments);
         this.type = "'fun'";
     }
 }
 exports.Fun = Fun;
-class If extends Token {
+class If {
     constructor() {
-        super(...arguments);
         this.type = "'if'";
     }
 }
 exports.If = If;
-class Nil extends Token {
+class Nil {
     constructor() {
-        super(...arguments);
         this.type = "'nil'";
     }
 }
 exports.Nil = Nil;
-class Or extends Token {
+class Or {
     constructor() {
-        super(...arguments);
         this.type = "'or'";
     }
 }
 exports.Or = Or;
-class Print extends Token {
+class Print {
     constructor() {
-        super(...arguments);
         this.type = "'print'";
     }
 }
 exports.Print = Print;
-class Return extends Token {
+class Return {
     constructor() {
-        super(...arguments);
         this.type = "'return'";
     }
 }
 exports.Return = Return;
-class Super extends Token {
+class Super {
     constructor() {
-        super(...arguments);
         this.type = "'super'";
     }
 }
 exports.Super = Super;
-class This extends Token {
+class This {
     constructor() {
-        super(...arguments);
         this.type = "'this'";
     }
 }
 exports.This = This;
-class Var extends Token {
+class Var {
     constructor() {
-        super(...arguments);
         this.type = "'var'";
     }
 }
 exports.Var = Var;
-class While extends Token {
+class While {
     constructor() {
-        super(...arguments);
         this.type = "'while'";
     }
 }
 exports.While = While;
-class Identifier extends Token {
+class Identifier {
     constructor(name) {
-        super();
         this.name = name;
         this.type = "identifier";
     }
 }
 exports.Identifier = Identifier;
-class StringLiteral extends Token {
+class StringLiteral {
     constructor(str) {
-        super();
         this.str = str;
         this.type = "string literal";
     }
 }
 exports.StringLiteral = StringLiteral;
-class NumberLiteral extends Token {
+class NumberLiteral {
     constructor(num) {
-        super();
         this.num = num;
         this.type = "number literal";
     }
 }
 exports.NumberLiteral = NumberLiteral;
-class BoolLiteral extends Token {
+class BoolLiteral {
     constructor(bool) {
-        super();
         this.bool = bool;
         this.type = "bool literal";
     }
 }
 exports.BoolLiteral = BoolLiteral;
-class EOF extends Token {
+class EOF {
     constructor() {
-        super(...arguments);
         this.type = "eof";
     }
 }
 exports.EOF = EOF;
-class BadCharacter extends diagnostics.Diagnostic {
+class BadCharacter {
     constructor(ch) {
-        super(`bad character: ${ch}`, null);
         this.ch = ch;
+        this.message = `bad character: ${ch}`;
+        this.explanation = null;
     }
 }
-class UnterminatedString extends diagnostics.Diagnostic {
-    constructor() { super("unterminated string", null); }
+class UnterminatedString {
+    constructor() { this.message = "unterminated string"; this.explanation = null; }
 }
 class Lexer {
     constructor(source) {
@@ -320,10 +280,10 @@ class Lexer {
             let tok = this.lex_single_token(tok_start);
             let tok_end = this.ind;
             if (tok != null) {
-                tokens.push(new diagnostics.Located(tok, new diagnostics.Span(this.source, tok_start, tok_end)));
+                tokens.push(Object.assign({ span: new diagnostics.Span(this.source, tok_start, tok_end) }, tok));
             }
         }
-        let eof = new diagnostics.Located(new EOF(), this.span(this.ind));
+        let eof = Object.assign(Object.assign({}, new EOF()), { span: this.span(this.ind) });
         return [tokens, eof];
     }
     lex_single_token(start_ind) {
@@ -371,7 +331,7 @@ class Lexer {
                     return this.identifier();
                 }
                 else {
-                    diagnostics.report(new diagnostics.Located(new BadCharacter(c), this.span(start_ind)));
+                    diagnostics.report(Object.assign(Object.assign({}, new BadCharacter(c)), { span: this.span(start_ind) }));
                     return null;
                 }
         }
@@ -382,7 +342,7 @@ class Lexer {
             this.advance();
         }
         if (this.at_end()) {
-            diagnostics.report(new diagnostics.Located(new UnterminatedString(), this.span(start_ind)));
+            diagnostics.report(Object.assign(Object.assign({}, new UnterminatedString()), { span: this.span(start_ind) }));
             return null;
         }
         let lit_end = this.ind;

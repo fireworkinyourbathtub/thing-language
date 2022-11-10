@@ -1,12 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WhileStmt = exports.ReturnStmt = exports.IfStmt = exports.ForStmt = exports.FunctionStmt = exports.BlockStmt = exports.VarStmt = exports.PrintStmt = exports.ExprStmt = exports.Stmt = exports.ThisExpr = exports.SetExpr = exports.LogicalExpr = exports.GetExpr = exports.CallExpr = exports.AssignExpr = exports.NilLiteral = exports.BoolLiteral = exports.NumberLiteral = exports.StringLiteral = exports.VarExpr = exports.UnaryExpr = exports.BinaryExpr = exports.LogicalOperator = exports.UnaryOperator = exports.BinaryOperator = exports.Expr = exports.AST = void 0;
-class AST {
-}
-exports.AST = AST;
-class Expr extends AST {
-}
-exports.Expr = Expr;
+exports.WhileStmt = exports.ReturnStmt = exports.IfStmt = exports.ForStmt = exports.FunctionStmt = exports.BlockStmt = exports.VarStmt = exports.PrintStmt = exports.ExprStmt = exports.ThisExpr = exports.SetExpr = exports.LogicalExpr = exports.GetExpr = exports.CallExpr = exports.AssignExpr = exports.NilLiteral = exports.BoolLiteral = exports.NumberLiteral = exports.StringLiteral = exports.VarExpr = exports.UnaryExpr = exports.BinaryExpr = exports.LogicalOperator = exports.UnaryOperator = exports.BinaryOperator = void 0;
 var BinaryOperator;
 (function (BinaryOperator) {
     BinaryOperator[BinaryOperator["Plus"] = 0] = "Plus";
@@ -32,9 +26,8 @@ var LogicalOperator;
     LogicalOperator[LogicalOperator["And"] = 0] = "And";
     LogicalOperator[LogicalOperator["Or"] = 1] = "Or";
 })(LogicalOperator = exports.LogicalOperator || (exports.LogicalOperator = {}));
-class BinaryExpr extends Expr {
+class BinaryExpr {
     constructor(left, right, op) {
-        super();
         this.left = left;
         this.right = right;
         this.op = op;
@@ -42,81 +35,72 @@ class BinaryExpr extends Expr {
     accept(visitor) { visitor.visitBinaryExpr(this); }
 }
 exports.BinaryExpr = BinaryExpr;
-class UnaryExpr extends Expr {
+class UnaryExpr {
     constructor(operator, operand) {
-        super();
         this.operator = operator;
         this.operand = operand;
     }
     accept(visitor) { visitor.visitUnaryExpr(this); }
 }
 exports.UnaryExpr = UnaryExpr;
-class VarExpr extends Expr {
+class VarExpr {
     constructor(name) {
-        super();
         this.name = name;
     }
     accept(visitor) { visitor.visitVarExpr(this); }
 }
 exports.VarExpr = VarExpr;
-class StringLiteral extends Expr {
+class StringLiteral {
     constructor(value) {
-        super();
         this.value = value;
     }
     accept(visitor) { visitor.visitStringLiteral(this); }
 }
 exports.StringLiteral = StringLiteral;
-class NumberLiteral extends Expr {
+class NumberLiteral {
     constructor(value) {
-        super();
         this.value = value;
     }
     accept(visitor) { visitor.visitNumberLiteral(this); }
 }
 exports.NumberLiteral = NumberLiteral;
-class BoolLiteral extends Expr {
+class BoolLiteral {
     constructor(value) {
-        super();
         this.value = value;
     }
     accept(visitor) { visitor.visitBoolLiteral(this); }
 }
 exports.BoolLiteral = BoolLiteral;
-class NilLiteral extends Expr {
-    constructor() { super(); }
+class NilLiteral {
+    constructor() { }
     accept(visitor) { visitor.visitNilLiteral(this); }
 }
 exports.NilLiteral = NilLiteral;
-class AssignExpr extends Expr {
+class AssignExpr {
     constructor(name, value) {
-        super();
         this.name = name;
     }
     accept(visitor) { visitor.visitAssignExpr(this); }
 }
 exports.AssignExpr = AssignExpr;
-class CallExpr extends Expr {
+class CallExpr {
     constructor(callee, args) {
-        super();
         this.callee = callee;
         this.args = args;
     }
     accept(visitor) { visitor.visitCallExpr(this); }
 }
 exports.CallExpr = CallExpr;
-class GetExpr extends Expr {
+class GetExpr {
     constructor(object, name) {
-        super();
         this.object = object;
         this.name = name;
     }
     accept(visitor) { visitor.visitGetExpr(this); }
 }
 exports.GetExpr = GetExpr;
-class LogicalExpr extends Expr {
+class LogicalExpr {
     constructor(left, operator, right) {
-        super();
         this.left = left;
         this.operator = operator;
         this.right = right;
@@ -124,9 +108,8 @@ class LogicalExpr extends Expr {
     accept(visitor) { visitor.visitLogicalExpr(this); }
 }
 exports.LogicalExpr = LogicalExpr;
-class SetExpr extends Expr {
+class SetExpr {
     constructor(object, name, value) {
-        super();
         this.object = object;
         this.name = name;
         this.value = value;
@@ -134,57 +117,48 @@ class SetExpr extends Expr {
     accept(visitor) { visitor.visitSetExpr(this); }
 }
 exports.SetExpr = SetExpr;
-class ThisExpr extends Expr {
+class ThisExpr {
     constructor(keyword) {
-        super();
         this.keyword = keyword;
     }
     accept(visitor) { visitor.visitThisExpr(this); }
 }
 exports.ThisExpr = ThisExpr;
-class Stmt extends AST {
-}
-exports.Stmt = Stmt;
-class ExprStmt extends Stmt {
+class ExprStmt {
     constructor(expr) {
-        super();
         this.expr = expr;
     }
     accept(visitor) { visitor.visitExprStmt(this); }
 }
 exports.ExprStmt = ExprStmt;
-class PrintStmt extends Stmt {
+class PrintStmt {
     constructor(expr) {
-        super();
         this.expr = expr;
     }
     accept(visitor) { visitor.visitPrintStmt(this); }
 }
 exports.PrintStmt = PrintStmt;
-class VarStmt extends Stmt {
+class VarStmt {
     constructor(name, initializer) {
-        super();
         this.name = name;
         this.initializer = initializer;
     }
     accept(visitor) { visitor.visitVarStmt(this); }
 }
 exports.VarStmt = VarStmt;
-class BlockStmt extends Stmt {
+class BlockStmt {
     constructor(stmts) {
-        super();
         this.stmts = stmts;
     }
     accept(visitor) { visitor.visitBlockStmt(this); }
 }
 exports.BlockStmt = BlockStmt;
-// export class ClassStmt extends Stmt {
-// constructor(name: string, List<Stmt.Function> methods) { super() }
+// export class ClassStmt implements Stmt {
+// constructor(name: string, List<Stmt.Function> methods) {}
 // accept(visitor: StmtVisitor) { visitor.visitClassStmt(this); }
 // }
-class FunctionStmt extends Stmt {
+class FunctionStmt {
     constructor(name, param, body) {
-        super();
         this.name = name;
         this.param = param;
         this.body = body;
@@ -192,9 +166,8 @@ class FunctionStmt extends Stmt {
     accept(visitor) { visitor.visitFunctionStmt(this); }
 }
 exports.FunctionStmt = FunctionStmt;
-class ForStmt extends Stmt {
+class ForStmt {
     constructor(initializer, compare, increment, body) {
-        super();
         this.initializer = initializer;
         this.compare = compare;
         this.increment = increment;
@@ -203,9 +176,8 @@ class ForStmt extends Stmt {
     accept(visitor) { visitor.visitForStmt(this); }
 }
 exports.ForStmt = ForStmt;
-class IfStmt extends Stmt {
+class IfStmt {
     constructor(condition, then_branch, else_branch) {
-        super();
         this.condition = condition;
         this.then_branch = then_branch;
         this.else_branch = else_branch;
@@ -213,17 +185,15 @@ class IfStmt extends Stmt {
     accept(visitor) { visitor.visitIfStmt(this); }
 }
 exports.IfStmt = IfStmt;
-class ReturnStmt extends Stmt {
+class ReturnStmt {
     constructor(value) {
-        super();
         this.value = value;
     }
     accept(visitor) { visitor.visitReturnStmt(this); }
 }
 exports.ReturnStmt = ReturnStmt;
-class WhileStmt extends Stmt {
+class WhileStmt {
     constructor(condition, body) {
-        super();
         this.condition = condition;
         this.body = body;
     }

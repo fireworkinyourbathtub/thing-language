@@ -10,6 +10,8 @@ function compile(stmts) {
 }
 exports.compile = compile;
 function compile_stmt(instructions, stmt) {
+    throw new Error("not implemented yet");
 }
 function compile_expr(instructions, expr) {
+    throw new Error("not implemented yet");
 }

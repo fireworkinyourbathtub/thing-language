@@ -15,7 +15,9 @@ export function compile(stmts: ast.Stmt[]): bytecode.Instruction[] {
 }
 
 function compile_stmt(instructions: bytecode.Instruction[], stmt: ast.Stmt) {
+    throw new Error("not implemented yet");
 }
 
 function compile_expr(instructions: bytecode.Instruction[], expr: ast.Expr): Register {
+    throw new Error("not implemented yet");
 }

@@ -161,17 +161,13 @@ let for_stmt: peg.PEG<ast.ForStmt> =
     new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(
         new peg.Token("'for'"),
         new peg.Token("'('")),
-        new peg.Choice(new peg.Choice(new peg.Indirect(() => var_decl!), expr_stmt), new peg.Token("';'"))),
+        new peg.Choice(new peg.Choice(new peg.Indirect(() => var_decl!), expr_stmt), new peg.Token("';'").apply(() => null))),
         new peg.Chain(new peg.Optional(new peg.Indirect(expression_indirect)), new peg.Token("';'"))),
         new peg.Chain(new peg.Optional(new peg.Indirect(expression_indirect)), new peg.Token("';'"))),
         new peg.Token("')'")),
         new peg.Indirect(statement_indirect))
         .apply(([[[[[[for_, oparen], initializer], cond], inc], cparen], body]) => {
-            let initializer_;
-            if (initializer instanceof lexer.Token) { initializer_ = null; }
-            else { initializer_ = initializer; }
-
-            return new ast.ForStmt(initializer_, cond[0], inc[0], body);
+            return new ast.ForStmt(initializer, cond[0], inc[0], body);
         })
 
 let if_stmt =
@@ -231,7 +227,7 @@ declaration = new peg.Choice(new peg.Choice(fun_decl, var_decl), statement);
 
 let script: peg.PEG<ast.Stmt[]> = new peg.Apply(([stmts, eof]) => stmts, new peg.Chain(new peg.ZeroMore(declaration), new peg.Token("eof")));
 
-export function parse([tokens, eof]: [diagnostics.Located<lexer.Token>[], diagnostics.Located<lexer.EOF>]): ast.Stmt[] | null {
+export function parse([tokens, eof]: [(lexer.Token & diagnostics.Located)[], lexer.EOF & diagnostics.Located]): ast.Stmt[] | null {
     let parser = new peg.Parser(tokens, eof);
     let location = new peg.ParseLocation(parser, 0);
 

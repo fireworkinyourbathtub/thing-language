@@ -10,78 +10,82 @@ export type TokenType =
 
 export type BinaryOperatorTokens = Plus | Minus | Star | Slash | Less | Equal | Greater | Bang | LessEqual | EqualEqual | GreaterEqual | BangEqual;
 
-export abstract class Token {
-    abstract readonly type: TokenType;
+export interface Token {
+    readonly type: TokenType;
 }
 
-export class OParen extends Token { readonly type: TokenType = "'('"; }
-export class CParen extends Token { readonly type: TokenType = "')'"; }
-export class Comma extends Token { readonly type: TokenType = "','"; }
-export class Dot extends Token { readonly type: TokenType = "'.'"; }
-export class Plus extends Token { readonly type: TokenType = "'+'"; }
-export class Minus extends Token { readonly type: TokenType = "'-'"; }
-export class Star extends Token { readonly type: TokenType = "'*'"; }
-export class Slash extends Token { readonly type: TokenType = "'/'"; }
+export class OParen implements Token { readonly type: TokenType = "'('"; }
+export class CParen implements Token { readonly type: TokenType = "')'"; }
+export class Comma implements Token { readonly type: TokenType = "','"; }
+export class Dot implements Token { readonly type: TokenType = "'.'"; }
+export class Plus implements Token { readonly type: TokenType = "'+'"; }
+export class Minus implements Token { readonly type: TokenType = "'-'"; }
+export class Star implements Token { readonly type: TokenType = "'*'"; }
+export class Slash implements Token { readonly type: TokenType = "'/'"; }
 
-export class OBrace extends Token { readonly type: TokenType = "'{'"; }
-export class CBrace extends Token { readonly type: TokenType = "'}'"; }
-export class Semicolon extends Token { readonly type: TokenType = "';'"; }
+export class OBrace implements Token { readonly type: TokenType = "'{'"; }
+export class CBrace implements Token { readonly type: TokenType = "'}'"; }
+export class Semicolon implements Token { readonly type: TokenType = "';'"; }
 
-export class Less extends Token { readonly type: TokenType = "'<'"; }
-export class Equal extends Token { readonly type: TokenType = "'='"; }
-export class Greater extends Token { readonly type: TokenType = "'>'"; }
-export class Bang extends Token { readonly type: TokenType = "'!'"; }
-export class LessEqual extends Token { readonly type: TokenType = "'<='"; }
-export class EqualEqual extends Token { readonly type: TokenType = "'=='"; }
-export class GreaterEqual extends Token { readonly type: TokenType = "'>='"; }
-export class BangEqual extends Token { readonly type: TokenType = "'!='"; }
+export class Less implements Token { readonly type: TokenType = "'<'"; }
+export class Equal implements Token { readonly type: TokenType = "'='"; }
+export class Greater implements Token { readonly type: TokenType = "'>'"; }
+export class Bang implements Token { readonly type: TokenType = "'!'"; }
+export class LessEqual implements Token { readonly type: TokenType = "'<='"; }
+export class EqualEqual implements Token { readonly type: TokenType = "'=='"; }
+export class GreaterEqual implements Token { readonly type: TokenType = "'>='"; }
+export class BangEqual implements Token { readonly type: TokenType = "'!='"; }
 
-export class And extends Token { readonly type: TokenType = "'and'"; }
-export class Class extends Token { readonly type: TokenType = "'class'"; }
-export class Else extends Token { readonly type: TokenType = "'else'"; }
-export class For extends Token { readonly type: TokenType = "'for'"; }
-export class Fun extends Token { readonly type: TokenType = "'fun'"; }
-export class If extends Token { readonly type: TokenType = "'if'"; }
-export class Nil extends Token { readonly type: TokenType = "'nil'"; }
-export class Or extends Token { readonly type: TokenType = "'or'"; }
-export class Print extends Token { readonly type: TokenType = "'print'"; }
-export class Return extends Token { readonly type: TokenType = "'return'"; }
-export class Super extends Token { readonly type: TokenType = "'super'"; }
-export class This extends Token { readonly type: TokenType = "'this'"; }
-export class Var extends Token { readonly type: TokenType = "'var'"; }
-export class While extends Token { readonly type: TokenType = "'while'"; }
+export class And implements Token { readonly type: TokenType = "'and'"; }
+export class Class implements Token { readonly type: TokenType = "'class'"; }
+export class Else implements Token { readonly type: TokenType = "'else'"; }
+export class For implements Token { readonly type: TokenType = "'for'"; }
+export class Fun implements Token { readonly type: TokenType = "'fun'"; }
+export class If implements Token { readonly type: TokenType = "'if'"; }
+export class Nil implements Token { readonly type: TokenType = "'nil'"; }
+export class Or implements Token { readonly type: TokenType = "'or'"; }
+export class Print implements Token { readonly type: TokenType = "'print'"; }
+export class Return implements Token { readonly type: TokenType = "'return'"; }
+export class Super implements Token { readonly type: TokenType = "'super'"; }
+export class This implements Token { readonly type: TokenType = "'this'"; }
+export class Var implements Token { readonly type: TokenType = "'var'"; }
+export class While implements Token { readonly type: TokenType = "'while'"; }
 
-export class Identifier extends Token {
-    constructor(public name: string) { super(); }
+export class Identifier implements Token {
+    constructor(public name: string) {}
 
     readonly type: TokenType = "identifier";
 }
 
-export class StringLiteral extends Token {
-    constructor(public str: string) { super(); }
+export class StringLiteral implements Token {
+    constructor(public str: string) {}
 
     readonly type: TokenType = "string literal";
 }
-export class NumberLiteral extends Token {
-    constructor(public num: number) { super(); }
+export class NumberLiteral implements Token {
+    constructor(public num: number) {}
 
     readonly type: TokenType = "number literal";
 }
 
-export class BoolLiteral extends Token {
-    constructor(public bool: boolean) { super(); }
+export class BoolLiteral implements Token {
+    constructor(public bool: boolean) {}
 
     readonly type: TokenType = "bool literal";
 }
 
-export class EOF extends Token { readonly type: TokenType = "eof"; }
+export class EOF implements Token { readonly type: TokenType = "eof"; }
 
-class BadCharacter extends diagnostics.Diagnostic {
-    constructor(public ch: string) { super(`bad character: ${ch}`, null); }
+class BadCharacter implements diagnostics.Diagnostic {
+    public message: string;
+    public explanation: null;
+    constructor(public ch: string) { this.message = `bad character: ${ch}`; this.explanation = null; }
 }
 
-class UnterminatedString extends diagnostics.Diagnostic {
-    constructor() { super("unterminated string", null); }
+class UnterminatedString implements diagnostics.Diagnostic {
+    public message: string;
+    public explanation: null;
+    constructor() { this.message = "unterminated string"; this.explanation = null; }
 }
 
 class Lexer {
@@ -93,7 +97,7 @@ class Lexer {
         this.ind = 0;
     }
 
-    lex(): [diagnostics.Located<Token>[], diagnostics.Located<EOF>] {
+    lex(): [(Token & diagnostics.Located)[], EOF & diagnostics.Located] {
         let tokens = [];
 
         while (!this.at_end()) {
@@ -102,11 +106,11 @@ class Lexer {
             let tok_end = this.ind;
 
             if (tok != null) {
-                tokens.push(new diagnostics.Located(tok, new diagnostics.Span(this.source, tok_start, tok_end)));
+                tokens.push({ span: new diagnostics.Span(this.source, tok_start, tok_end), ...tok });
             }
         }
 
-        let eof = new diagnostics.Located(new EOF(), this.span(this.ind));
+        let eof = { ...new EOF(), span: this.span(this.ind) };
 
         return [tokens, eof];
     }
@@ -157,7 +161,7 @@ class Lexer {
                 } else if (this.is_alpha(c)) {
                     return this.identifier();
                 } else {
-                    diagnostics.report(new diagnostics.Located(new BadCharacter(c), this.span(start_ind)));
+                    diagnostics.report({ ...new BadCharacter(c), span: this.span(start_ind)});
                     return null;
                 }
         }
@@ -170,7 +174,7 @@ class Lexer {
         }
 
         if (this.at_end()) {
-            diagnostics.report(new diagnostics.Located(new UnterminatedString(), this.span(start_ind)));
+            diagnostics.report({...new UnterminatedString(), span: this.span(start_ind)});
             return null;
         }
 
@@ -285,6 +289,6 @@ class Lexer {
     }
 }
 
-export function lex(input: string): [diagnostics.Located<Token>[], diagnostics.Located<EOF>] {
+export function lex(input: string): [(Token & diagnostics.Located)[], EOF & diagnostics.Located] {
     return new Lexer(input).lex();
 }

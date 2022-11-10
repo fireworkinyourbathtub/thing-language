@@ -1,6 +1,6 @@
 import * as diagnostics from './diagnostics';
 
-export abstract class Instruction {
-    abstract readonly span: diagnostics.Span;
-    abstract pretty_print(): string;
+export interface Instruction {
+    readonly span: diagnostics.Span;
+    pretty_print(): string;
 }

@@ -1,6 +1,6 @@
 import * as lexer from './lexer';
 
-export abstract class AST {}
+export interface AST {}
 
 interface ExprVisitor {
     visitBinaryExpr(ast: BinaryExpr): void;
@@ -20,8 +20,8 @@ interface ExprVisitor {
     // visit(ast: SuperExpr): void;
 }
 
-export abstract class Expr extends AST {
-    abstract accept(visitor: ExprVisitor): void;
+export interface Expr extends AST {
+    accept(visitor: ExprVisitor): void;
 }
 
 export enum BinaryOperator {
@@ -40,61 +40,61 @@ export enum LogicalOperator {
     Or,
 }
 
-export class BinaryExpr extends Expr {
-    constructor(public left: Expr, public right: Expr, public op: BinaryOperator) { super() }
+export class BinaryExpr implements Expr {
+    constructor(public left: Expr, public right: Expr, public op: BinaryOperator) {}
     accept(visitor: ExprVisitor) { visitor.visitBinaryExpr(this); }
 }
-export class UnaryExpr extends Expr {
-    constructor(public operator: UnaryOperator, public operand: Expr) { super() }
+export class UnaryExpr implements Expr {
+    constructor(public operator: UnaryOperator, public operand: Expr) {}
     accept(visitor: ExprVisitor) { visitor.visitUnaryExpr(this); }
 }
-export class VarExpr extends Expr {
-    constructor(public name: string) { super() }
+export class VarExpr implements Expr {
+    constructor(public name: string) {}
     accept(visitor: ExprVisitor) { visitor.visitVarExpr(this); }
 }
-export class StringLiteral extends Expr {
-    constructor(public value: string) { super() }
+export class StringLiteral implements Expr {
+    constructor(public value: string) {}
     accept(visitor: ExprVisitor) { visitor.visitStringLiteral(this); }
 }
-export class NumberLiteral extends Expr {
-    constructor(public value: number) { super() }
+export class NumberLiteral implements Expr {
+    constructor(public value: number) {}
     accept(visitor: ExprVisitor) { visitor.visitNumberLiteral(this); }
 }
-export class BoolLiteral extends Expr {
-    constructor(public value: boolean) { super() }
+export class BoolLiteral implements Expr {
+    constructor(public value: boolean) {}
     accept(visitor: ExprVisitor) { visitor.visitBoolLiteral(this); }
 }
-export class NilLiteral extends Expr {
-    constructor() { super() }
+export class NilLiteral implements Expr {
+    constructor() {}
     accept(visitor: ExprVisitor) { visitor.visitNilLiteral(this); }
 }
-export class AssignExpr extends Expr {
-    constructor(public name: string, value: Expr) { super() }
+export class AssignExpr implements Expr {
+    constructor(public name: string, value: Expr) {}
     accept(visitor: ExprVisitor) { visitor.visitAssignExpr(this); }
 }
-export class CallExpr extends Expr {
-    constructor(public callee: Expr, public args: Expr[]) { super() }
+export class CallExpr implements Expr {
+    constructor(public callee: Expr, public args: Expr[]) {}
     accept(visitor: ExprVisitor) { visitor.visitCallExpr(this); }
 }
-export class GetExpr extends Expr {
-    constructor(public object: Expr, public name: string) { super() }
+export class GetExpr implements Expr {
+    constructor(public object: Expr, public name: string) {}
     accept(visitor: ExprVisitor) { visitor.visitGetExpr(this); }
 }
-export class LogicalExpr extends Expr {
-    constructor(public left: Expr, public operator: LogicalOperator, public right: Expr) { super() }
+export class LogicalExpr implements Expr {
+    constructor(public left: Expr, public operator: LogicalOperator, public right: Expr) {}
     accept(visitor: ExprVisitor) { visitor.visitLogicalExpr(this); }
 }
-export class SetExpr extends Expr {
-    constructor(public object: Expr, public name: string, public value: Expr) { super() }
+export class SetExpr implements Expr {
+    constructor(public object: Expr, public name: string, public value: Expr) {}
     accept(visitor: ExprVisitor) { visitor.visitSetExpr(this); }
 }
-export class ThisExpr extends Expr {
-    constructor(public keyword: lexer.This) { super() }
+export class ThisExpr implements Expr {
+    constructor(public keyword: lexer.This) {}
     accept(visitor: ExprVisitor) { visitor.visitThisExpr(this); }
 }
 
-// export class SuperExpr extends Expr {
-// constructor(keyword: Token, method: ) { super() }
+// export class SuperExpr implements Expr {
+// constructor(keyword: Token, method: ) {}
 // accept(visitor: ExprVisitor) { visitor.visitSuperExpr(this); }
 // }
 
@@ -110,47 +110,47 @@ interface StmtVisitor {
     visitReturnStmt(ast: ReturnStmt): void;
     visitWhileStmt(ast: WhileStmt): void;
 }
-export abstract class Stmt extends AST {
-    abstract accept(visitor: StmtVisitor): void;
+export interface Stmt extends AST {
+    accept(visitor: StmtVisitor): void;
 }
 
-export class ExprStmt extends Stmt {
-    constructor(public expr: Expr) { super() }
+export class ExprStmt implements Stmt {
+    constructor(public expr: Expr) {}
     accept(visitor: StmtVisitor) { visitor.visitExprStmt(this); }
 }
-export class PrintStmt extends Stmt {
-    constructor(public expr: Expr) { super() }
+export class PrintStmt implements Stmt {
+    constructor(public expr: Expr) {}
     accept(visitor: StmtVisitor) { visitor.visitPrintStmt(this); }
 }
-export class VarStmt extends Stmt {
-    constructor(public name: string, public initializer: Expr | null) { super() }
+export class VarStmt implements Stmt {
+    constructor(public name: string, public initializer: Expr | null) {}
     accept(visitor: StmtVisitor) { visitor.visitVarStmt(this); }
 }
-export class BlockStmt extends Stmt {
-    constructor(public stmts: Stmt[]) { super() }
+export class BlockStmt implements Stmt {
+    constructor(public stmts: Stmt[]) {}
     accept(visitor: StmtVisitor) { visitor.visitBlockStmt(this); }
 }
-// export class ClassStmt extends Stmt {
-// constructor(name: string, List<Stmt.Function> methods) { super() }
+// export class ClassStmt implements Stmt {
+// constructor(name: string, List<Stmt.Function> methods) {}
 // accept(visitor: StmtVisitor) { visitor.visitClassStmt(this); }
 // }
-export class FunctionStmt extends Stmt {
-    constructor(public name: string, public param: string[], public body: BlockStmt) { super() }
+export class FunctionStmt implements Stmt {
+    constructor(public name: string, public param: string[], public body: BlockStmt) {}
     accept(visitor: StmtVisitor) { visitor.visitFunctionStmt(this); }
 }
-export class ForStmt extends Stmt {
-    constructor(public initializer: Stmt | null, public compare: Expr | null, public increment: Expr | null, public body: Stmt) { super() }
+export class ForStmt implements Stmt {
+    constructor(public initializer: Stmt | null, public compare: Expr | null, public increment: Expr | null, public body: Stmt) {}
     accept(visitor: StmtVisitor) { visitor.visitForStmt(this); }
 }
-export class IfStmt extends Stmt {
-    constructor(public condition: Expr, public then_branch: Stmt, public else_branch: Stmt | null) { super() }
+export class IfStmt implements Stmt {
+    constructor(public condition: Expr, public then_branch: Stmt, public else_branch: Stmt | null) {}
     accept(visitor: StmtVisitor) { visitor.visitIfStmt(this); }
 }
-export class ReturnStmt extends Stmt {
-    constructor(public value: Expr | null) { super() }
+export class ReturnStmt implements Stmt {
+    constructor(public value: Expr | null) {}
     accept(visitor: StmtVisitor) { visitor.visitReturnStmt(this); }
 }
-export class WhileStmt extends Stmt {
-    constructor(public condition: Expr, public body: Stmt) { super() }
+export class WhileStmt implements Stmt {
+    constructor(public condition: Expr, public body: Stmt) {}
     accept(visitor: StmtVisitor) { visitor.visitWhileStmt(this); }
 }

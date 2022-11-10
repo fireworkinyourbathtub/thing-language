@@ -23,12 +23,13 @@ function get_linecol(source: string, ind: number): [number, number] {
     }
 }
 
-export class Located<T> {
-    constructor(public thing: T, public span: Span) {}
+export interface Located {
+    span: Span;
 }
 
-export class Diagnostic {
-    constructor(public message: string, public explanation: string | null) {}
+export interface Diagnostic {
+    message: string;
+    explanation: string | null;
 }
 
 export function clear() {
@@ -37,14 +38,14 @@ export function clear() {
     }
 }
 
-export function report(diagnostic: Located<Diagnostic>) {
+export function report(diagnostic: Located & Diagnostic) {
     let div = document.createElement('div');
     div.className = 'error';
 
     {
         let heading = document.createElement('p');
         heading.className = 'error_heading';
-        heading.innerHTML = `error at ${diagnostic.span.start_line}:${diagnostic.span.start_column}: ${diagnostic.thing.message}`;
+        heading.innerHTML = `error at ${diagnostic.span.start_line}:${diagnostic.span.start_column}: ${diagnostic.message}`;
         div.appendChild(heading);
     }
 
@@ -99,10 +100,10 @@ export function report(diagnostic: Located<Diagnostic>) {
         div.appendChild(view);
     }
 
-    if (diagnostic.thing.explanation) {
+    if (diagnostic.explanation) {
         let explanation = document.createElement('p');
         explanation.className = 'error_explanation';
-        explanation.innerHTML = diagnostic.thing.explanation;
+        explanation.innerHTML = diagnostic.explanation;
         div.appendChild(explanation);
     }
 

@@ -43,12 +43,16 @@ class Parser {
         let es = this.errors.get(max_ind);
         let explanation;
         if (es.length == 1) {
-            explanation = `expected ${es[0]}, got ${got.thing.type}`;
+            explanation = `expected ${es[0]}, got ${got.type}`;
         }
         else {
-            explanation = `expected one of ${es}, got ${got.thing.type}`;
+            explanation = `expected one of ${es}, got ${got.type}`;
         }
-        diagnostics.report(new diagnostics.Located(new diagnostics.Diagnostic(`parse error: ${explanation}`, null), got.span));
+        diagnostics.report({
+            message: `parse error: ${explanation}`,
+            explanation: null,
+            span: got.span,
+        });
     }
     get_tok(ind) {
         if (ind >= this.tokens.length) {
@@ -91,8 +95,8 @@ class Token extends PEG {
     }
     parse(parser, location) {
         let t = location.tok();
-        if (t.thing.type == this.type) {
-            return [location.advance(), t.thing];
+        if (t.type == this.type) {
+            return [location.advance(), t];
         }
         else {
             parser.error(location.ind, this.type);

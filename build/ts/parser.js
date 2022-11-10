@@ -136,16 +136,9 @@ let statement;
 let statement_indirect = () => statement;
 let declaration;
 let declaration_indirect = () => declaration;
-let for_stmt = new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Token("'for'"), new peg.Token("'('")), new peg.Choice(new peg.Choice(new peg.Indirect(() => var_decl), expr_stmt), new peg.Token("';'"))), new peg.Chain(new peg.Optional(new peg.Indirect(expression_indirect)), new peg.Token("';'"))), new peg.Chain(new peg.Optional(new peg.Indirect(expression_indirect)), new peg.Token("';'"))), new peg.Token("')'")), new peg.Indirect(statement_indirect))
+let for_stmt = new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Token("'for'"), new peg.Token("'('")), new peg.Choice(new peg.Choice(new peg.Indirect(() => var_decl), expr_stmt), new peg.Token("';'").apply(() => null))), new peg.Chain(new peg.Optional(new peg.Indirect(expression_indirect)), new peg.Token("';'"))), new peg.Chain(new peg.Optional(new peg.Indirect(expression_indirect)), new peg.Token("';'"))), new peg.Token("')'")), new peg.Indirect(statement_indirect))
     .apply(([[[[[[for_, oparen], initializer], cond], inc], cparen], body]) => {
-    let initializer_;
-    if (initializer instanceof lexer.Token) {
-        initializer_ = null;
-    }
-    else {
-        initializer_ = initializer;
-    }
-    return new ast.ForStmt(initializer_, cond[0], inc[0], body);
+    return new ast.ForStmt(initializer, cond[0], inc[0], body);
 });
 let if_stmt = new peg.Apply(([[[[[if_, oparen], cond], cparen], body], m_else]) => new ast.IfStmt(cond, body, m_else ? m_else[1] : null), new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Token("'if'"), new peg.Token("'('")), new peg.Indirect(expression_indirect)), new peg.Token("')'")), new peg.Indirect(statement_indirect)), new peg.Optional(new peg.Chain(new peg.Token("'else'"), new peg.Indirect(statement_indirect)))));
 let return_stmt = new peg.Apply(([[return_, m_expr], semi]) => new ast.ReturnStmt(m_expr), new peg.Chain(new peg.Chain(new peg.Token("'return'"), new peg.Optional(new peg.Indirect(expression_indirect))), new peg.Token("';'")));

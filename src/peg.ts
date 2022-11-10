@@ -3,7 +3,7 @@ import * as diagnostics from './diagnostics';
 
 export class Parser {
     errors: Map<number, lexer.TokenType[]>;
-    constructor(public readonly tokens: diagnostics.Located<lexer.Token>[], public readonly eof: diagnostics.Located<lexer.EOF>) {
+    constructor(public readonly tokens: (lexer.Token & diagnostics.Located)[], public readonly eof: lexer.EOF & diagnostics.Located) {
         this.errors = new Map();
     }
 
@@ -21,17 +21,16 @@ export class Parser {
 
         let explanation;
         if (es.length == 1) {
-            explanation = `expected ${es[0]}, got ${got.thing.type}`;
+            explanation = `expected ${es[0]}, got ${got.type}`;
         } else {
-            explanation = `expected one of ${es}, got ${got.thing.type}`;
+            explanation = `expected one of ${es}, got ${got.type}`;
         }
 
-        diagnostics.report(
-            new diagnostics.Located(
-                new diagnostics.Diagnostic(`parse error: ${explanation}`, null),
-                got.span,
-            )
-        );
+        diagnostics.report({
+            message: `parse error: ${explanation}`,
+            explanation: null,
+            span: got.span,
+        });
     }
 
     get_tok(ind: number) {
@@ -50,7 +49,7 @@ export class ParseLocation {
         return new ParseLocation(this.parser, this.ind + 1);
     }
 
-    tok(): diagnostics.Located<lexer.Token> { return this.parser.get_tok(this.ind); }
+    tok(): lexer.Token & diagnostics.Located { return this.parser.get_tok(this.ind); }
 }
 
 export abstract class PEG<T> {
@@ -77,8 +76,8 @@ export class Token<T extends lexer.Token> extends PEG<T> {
 
     parse(parser: Parser, location: ParseLocation): [ParseLocation, T] | null {
         let t = location.tok();
-        if (t.thing.type == this.type) {
-            return [location.advance(), t.thing as T];
+        if (t.type == this.type) {
+            return [location.advance(), t as unknown as T];
         } else {
             parser.error(location.ind, this.type);
             return null;

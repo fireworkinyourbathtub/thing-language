@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.report = exports.clear = exports.Diagnostic = exports.Located = exports.Span = void 0;
+exports.report = exports.clear = exports.Span = void 0;
 const errors_div = document.getElementById('errors');
 class Span {
     constructor(source, start, end) {
@@ -22,20 +22,6 @@ function get_linecol(source, ind) {
         return [line, 0];
     }
 }
-class Located {
-    constructor(thing, span) {
-        this.thing = thing;
-        this.span = span;
-    }
-}
-exports.Located = Located;
-class Diagnostic {
-    constructor(message, explanation) {
-        this.message = message;
-        this.explanation = explanation;
-    }
-}
-exports.Diagnostic = Diagnostic;
 function clear() {
     while (errors_div.lastChild) {
         errors_div.removeChild(errors_div.lastChild);
@@ -48,7 +34,7 @@ function report(diagnostic) {
     {
         let heading = document.createElement('p');
         heading.className = 'error_heading';
-        heading.innerHTML = `error at ${diagnostic.span.start_line}:${diagnostic.span.start_column}: ${diagnostic.thing.message}`;
+        heading.innerHTML = `error at ${diagnostic.span.start_line}:${diagnostic.span.start_column}: ${diagnostic.message}`;
         div.appendChild(heading);
     }
     {
@@ -88,10 +74,10 @@ function report(diagnostic) {
         }
         div.appendChild(view);
     }
-    if (diagnostic.thing.explanation) {
+    if (diagnostic.explanation) {
         let explanation = document.createElement('p');
         explanation.className = 'error_explanation';
-        explanation.innerHTML = diagnostic.thing.explanation;
+        explanation.innerHTML = diagnostic.explanation;
         div.appendChild(explanation);
     }
     errors_div.appendChild(div);
