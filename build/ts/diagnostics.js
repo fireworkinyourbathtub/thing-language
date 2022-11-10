@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.report = exports.clear = exports.Span = void 0;
+exports.report = exports.join_spans = exports.clear = exports.Span = void 0;
 const errors_div = document.getElementById('errors');
 class Span {
     constructor(source, start, end) {
@@ -28,6 +28,10 @@ function clear() {
     }
 }
 exports.clear = clear;
+function join_spans(sp1, sp2) {
+    return new Span(sp1.source, Math.min(sp1.start, sp2.start), Math.max(sp1.end, sp2.end));
+}
+exports.join_spans = join_spans;
 function report(diagnostic) {
     let div = document.createElement('div');
     div.className = 'error';

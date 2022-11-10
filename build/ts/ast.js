@@ -27,176 +27,199 @@ var LogicalOperator;
     LogicalOperator[LogicalOperator["Or"] = 1] = "Or";
 })(LogicalOperator = exports.LogicalOperator || (exports.LogicalOperator = {}));
 class BinaryExpr {
-    constructor(left, right, op) {
+    constructor(span, left, right, op) {
+        this.span = span;
         this.left = left;
         this.right = right;
         this.op = op;
     }
-    accept(visitor) { visitor.visitBinaryExpr(this); }
+    accept(visitor) { return visitor.visitBinaryExpr(this); }
 }
 exports.BinaryExpr = BinaryExpr;
 class UnaryExpr {
-    constructor(operator, operand) {
+    constructor(span, operator, operand) {
+        this.span = span;
         this.operator = operator;
         this.operand = operand;
     }
-    accept(visitor) { visitor.visitUnaryExpr(this); }
+    accept(visitor) { return visitor.visitUnaryExpr(this); }
 }
 exports.UnaryExpr = UnaryExpr;
 class VarExpr {
-    constructor(name) {
+    constructor(span, name) {
+        this.span = span;
         this.name = name;
     }
-    accept(visitor) { visitor.visitVarExpr(this); }
+    accept(visitor) { return visitor.visitVarExpr(this); }
 }
 exports.VarExpr = VarExpr;
 class StringLiteral {
-    constructor(value) {
+    constructor(span, value) {
+        this.span = span;
         this.value = value;
     }
-    accept(visitor) { visitor.visitStringLiteral(this); }
+    accept(visitor) { return visitor.visitStringLiteral(this); }
 }
 exports.StringLiteral = StringLiteral;
 class NumberLiteral {
-    constructor(value) {
+    constructor(span, value) {
+        this.span = span;
         this.value = value;
     }
-    accept(visitor) { visitor.visitNumberLiteral(this); }
+    accept(visitor) { return visitor.visitNumberLiteral(this); }
 }
 exports.NumberLiteral = NumberLiteral;
 class BoolLiteral {
-    constructor(value) {
+    constructor(span, value) {
+        this.span = span;
         this.value = value;
     }
-    accept(visitor) { visitor.visitBoolLiteral(this); }
+    accept(visitor) { return visitor.visitBoolLiteral(this); }
 }
 exports.BoolLiteral = BoolLiteral;
 class NilLiteral {
-    constructor() { }
-    accept(visitor) { visitor.visitNilLiteral(this); }
+    constructor(span) {
+        this.span = span;
+    }
+    accept(visitor) { return visitor.visitNilLiteral(this); }
 }
 exports.NilLiteral = NilLiteral;
 class AssignExpr {
-    constructor(name, value) {
+    constructor(span, name, value) {
+        this.span = span;
         this.name = name;
     }
-    accept(visitor) { visitor.visitAssignExpr(this); }
+    accept(visitor) { return visitor.visitAssignExpr(this); }
 }
 exports.AssignExpr = AssignExpr;
 class CallExpr {
-    constructor(callee, args) {
+    constructor(span, callee, args) {
+        this.span = span;
         this.callee = callee;
         this.args = args;
     }
-    accept(visitor) { visitor.visitCallExpr(this); }
+    accept(visitor) { return visitor.visitCallExpr(this); }
 }
 exports.CallExpr = CallExpr;
 class GetExpr {
-    constructor(object, name) {
+    constructor(span, object, name) {
+        this.span = span;
         this.object = object;
         this.name = name;
     }
-    accept(visitor) { visitor.visitGetExpr(this); }
+    accept(visitor) { return visitor.visitGetExpr(this); }
 }
 exports.GetExpr = GetExpr;
 class LogicalExpr {
-    constructor(left, operator, right) {
+    constructor(span, left, operator, right) {
+        this.span = span;
         this.left = left;
         this.operator = operator;
         this.right = right;
     }
-    accept(visitor) { visitor.visitLogicalExpr(this); }
+    accept(visitor) { return visitor.visitLogicalExpr(this); }
 }
 exports.LogicalExpr = LogicalExpr;
 class SetExpr {
-    constructor(object, name, value) {
+    constructor(span, object, name, value) {
+        this.span = span;
         this.object = object;
         this.name = name;
         this.value = value;
     }
-    accept(visitor) { visitor.visitSetExpr(this); }
+    accept(visitor) { return visitor.visitSetExpr(this); }
 }
 exports.SetExpr = SetExpr;
 class ThisExpr {
-    constructor(keyword) {
+    constructor(span, keyword) {
+        this.span = span;
         this.keyword = keyword;
     }
-    accept(visitor) { visitor.visitThisExpr(this); }
+    accept(visitor) { return visitor.visitThisExpr(this); }
 }
 exports.ThisExpr = ThisExpr;
 class ExprStmt {
-    constructor(expr) {
+    constructor(span, expr) {
+        this.span = span;
         this.expr = expr;
     }
-    accept(visitor) { visitor.visitExprStmt(this); }
+    accept(visitor) { return visitor.visitExprStmt(this); }
 }
 exports.ExprStmt = ExprStmt;
 class PrintStmt {
-    constructor(expr) {
+    constructor(span, expr) {
+        this.span = span;
         this.expr = expr;
     }
-    accept(visitor) { visitor.visitPrintStmt(this); }
+    accept(visitor) { return visitor.visitPrintStmt(this); }
 }
 exports.PrintStmt = PrintStmt;
 class VarStmt {
-    constructor(name, initializer) {
+    constructor(span, name, initializer) {
+        this.span = span;
         this.name = name;
         this.initializer = initializer;
     }
-    accept(visitor) { visitor.visitVarStmt(this); }
+    accept(visitor) { return visitor.visitVarStmt(this); }
 }
 exports.VarStmt = VarStmt;
 class BlockStmt {
-    constructor(stmts) {
+    constructor(span, stmts) {
+        this.span = span;
         this.stmts = stmts;
     }
-    accept(visitor) { visitor.visitBlockStmt(this); }
+    accept(visitor) { return visitor.visitBlockStmt(this); }
 }
 exports.BlockStmt = BlockStmt;
 // export class ClassStmt implements Stmt {
-// constructor(name: string, List<Stmt.Function> methods) {}
-// accept(visitor: StmtVisitor) { visitor.visitClassStmt(this); }
+// constructor(public span: diagnostics.Span, name: string, List<Stmt.Function> methods) {}
+// accept<T>(visitor: StmtVisitor<T>) { return visitor.visitClassStmt(this); }
 // }
 class FunctionStmt {
-    constructor(name, param, body) {
+    constructor(span, name, params, body) {
+        this.span = span;
         this.name = name;
-        this.param = param;
+        this.params = params;
         this.body = body;
     }
-    accept(visitor) { visitor.visitFunctionStmt(this); }
+    accept(visitor) { return visitor.visitFunctionStmt(this); }
 }
 exports.FunctionStmt = FunctionStmt;
 class ForStmt {
-    constructor(initializer, compare, increment, body) {
+    constructor(span, initializer, compare, increment, body) {
+        this.span = span;
         this.initializer = initializer;
         this.compare = compare;
         this.increment = increment;
         this.body = body;
     }
-    accept(visitor) { visitor.visitForStmt(this); }
+    accept(visitor) { return visitor.visitForStmt(this); }
 }
 exports.ForStmt = ForStmt;
 class IfStmt {
-    constructor(condition, then_branch, else_branch) {
+    constructor(span, condition, then_branch, else_branch) {
+        this.span = span;
         this.condition = condition;
         this.then_branch = then_branch;
         this.else_branch = else_branch;
     }
-    accept(visitor) { visitor.visitIfStmt(this); }
+    accept(visitor) { return visitor.visitIfStmt(this); }
 }
 exports.IfStmt = IfStmt;
 class ReturnStmt {
-    constructor(value) {
+    constructor(span, value) {
+        this.span = span;
         this.value = value;
     }
-    accept(visitor) { visitor.visitReturnStmt(this); }
+    accept(visitor) { return visitor.visitReturnStmt(this); }
 }
 exports.ReturnStmt = ReturnStmt;
 class WhileStmt {
-    constructor(condition, body) {
+    constructor(span, condition, body) {
+        this.span = span;
         this.condition = condition;
         this.body = body;
     }
-    accept(visitor) { visitor.visitWhileStmt(this); }
+    accept(visitor) { return visitor.visitWhileStmt(this); }
 }
 exports.WhileStmt = WhileStmt;

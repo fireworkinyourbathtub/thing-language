@@ -69,15 +69,15 @@ export abstract class PEG<T> {
     }
 }
 
-export class Token<T extends lexer.Token> extends PEG<T> {
+export class Token<T extends lexer.Token> extends PEG<T & diagnostics.Located> {
     constructor(readonly type: lexer.TokenType) {
         super();
     }
 
-    parse(parser: Parser, location: ParseLocation): [ParseLocation, T] | null {
+    parse(parser: Parser, location: ParseLocation): [ParseLocation, T & diagnostics.Located] | null {
         let t = location.tok();
         if (t.type == this.type) {
-            return [location.advance(), t as unknown as T];
+            return [location.advance(), t as unknown as T & diagnostics.Located];
         } else {
             parser.error(location.ind, this.type);
             return null;

@@ -38,6 +38,10 @@ export function clear() {
     }
 }
 
+export function join_spans(sp1: Span, sp2: Span) {
+    return new Span(sp1.source, Math.min(sp1.start, sp2.start), Math.max(sp1.end, sp2.end));
+}
+
 export function report(diagnostic: Located & Diagnostic) {
     let div = document.createElement('div');
     div.className = 'error';
