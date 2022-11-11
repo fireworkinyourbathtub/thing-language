@@ -8,13 +8,11 @@ var BinaryOperator;
     BinaryOperator[BinaryOperator["Star"] = 2] = "Star";
     BinaryOperator[BinaryOperator["Slash"] = 3] = "Slash";
     BinaryOperator[BinaryOperator["Less"] = 4] = "Less";
-    BinaryOperator[BinaryOperator["Equal"] = 5] = "Equal";
-    BinaryOperator[BinaryOperator["Greater"] = 6] = "Greater";
-    BinaryOperator[BinaryOperator["Bang"] = 7] = "Bang";
-    BinaryOperator[BinaryOperator["LessEqual"] = 8] = "LessEqual";
-    BinaryOperator[BinaryOperator["EqualEqual"] = 9] = "EqualEqual";
-    BinaryOperator[BinaryOperator["GreaterEqual"] = 10] = "GreaterEqual";
-    BinaryOperator[BinaryOperator["BangEqual"] = 11] = "BangEqual";
+    BinaryOperator[BinaryOperator["Greater"] = 5] = "Greater";
+    BinaryOperator[BinaryOperator["LessEqual"] = 6] = "LessEqual";
+    BinaryOperator[BinaryOperator["GreaterEqual"] = 7] = "GreaterEqual";
+    BinaryOperator[BinaryOperator["EqualEqual"] = 8] = "EqualEqual";
+    BinaryOperator[BinaryOperator["BangEqual"] = 9] = "BangEqual";
 })(BinaryOperator = exports.BinaryOperator || (exports.BinaryOperator = {}));
 var UnaryOperator;
 (function (UnaryOperator) {

@@ -49,14 +49,8 @@ function astify_binary_expr([comp, ops]) {
             case "'<'":
                 op_ast = ast.BinaryOperator.Less;
                 break;
-            case "'='":
-                op_ast = ast.BinaryOperator.Equal;
-                break;
             case "'>'":
                 op_ast = ast.BinaryOperator.Greater;
-                break;
-            case "'!'":
-                op_ast = ast.BinaryOperator.Bang;
                 break;
             case "'<='":
                 op_ast = ast.BinaryOperator.LessEqual;

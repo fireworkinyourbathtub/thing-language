@@ -15,9 +15,7 @@ function astify_binary_expr([comp, ops]: [ast.Expr, [lexer.BinaryOperatorTokens,
             case  "'*'": op_ast = ast.BinaryOperator.Star; break;
             case  "'/'": op_ast = ast.BinaryOperator.Slash; break;
             case  "'<'": op_ast = ast.BinaryOperator.Less; break;
-            case  "'='": op_ast = ast.BinaryOperator.Equal; break;
             case  "'>'": op_ast = ast.BinaryOperator.Greater; break;
-            case  "'!'": op_ast = ast.BinaryOperator.Bang; break;
             case  "'<='": op_ast = ast.BinaryOperator.LessEqual; break;
             case  "'=='": op_ast = ast.BinaryOperator.EqualEqual; break;
             case  "'>='": op_ast = ast.BinaryOperator.GreaterEqual; break;

@@ -25,6 +25,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrettyPrintContext = exports.StmtMarker = exports.UnaryOp = exports.BinaryOp = exports.Call = exports.Assign = exports.ReadVar = exports.EndScope = exports.StartScope = exports.Return = exports.If = exports.While = exports.DefineFun = exports.MakeVar = exports.Print = exports.Constant = exports.Nil = exports.Register = void 0;
 const diagnostics = __importStar(require("./diagnostics"));
+const ast = __importStar(require("./ast"));
 class Register {
     constructor(index) {
         this.index = index;
@@ -199,8 +200,40 @@ class BinaryOp {
         this.dest = dest;
     }
     pretty_print(ppc) {
-        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span);
-        throw new Error("not implemented yet");
+        let op_name;
+        switch (this.op) {
+            case ast.BinaryOperator.Plus:
+                op_name = 'add';
+                break;
+            case ast.BinaryOperator.Minus:
+                op_name = 'sub';
+                break;
+            case ast.BinaryOperator.Star:
+                op_name = 'mul';
+                break;
+            case ast.BinaryOperator.Slash:
+                op_name = 'div';
+                break;
+            case ast.BinaryOperator.Less:
+                op_name = 'cmp<';
+                break;
+            case ast.BinaryOperator.Greater:
+                op_name = 'cmp>';
+                break;
+            case ast.BinaryOperator.LessEqual:
+                op_name = 'cmp<=';
+                break;
+            case ast.BinaryOperator.EqualEqual:
+                op_name = 'cmp==';
+                break;
+            case ast.BinaryOperator.GreaterEqual:
+                op_name = 'cmp>=';
+                break;
+            case ast.BinaryOperator.BangEqual:
+                op_name = 'cmp!=';
+                break;
+        }
+        ppc.append(`${op_name} ${this.l.pretty_print()} ${this.r.pretty_print()} -> ${this.dest.pretty_print()};`, this.span);
     }
 }
 exports.BinaryOp = BinaryOp;
@@ -212,8 +245,17 @@ class UnaryOp {
         this.dest = dest;
     }
     pretty_print(ppc) {
-        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span);
-        throw new Error("not implemented yet");
+        let op_name;
+        switch (this.op) {
+            case ast.UnaryOperator.Minus:
+                op_name = 'neg';
+                break;
+            case ast.UnaryOperator.Bang:
+                op_name = 'logic_neg';
+                break;
+        }
+        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span); // TODO
+        ppc.append(`${op_name} ${this.v.pretty_print()} -> ${this.dest.pretty_print()};`, this.span);
     }
 }
 exports.UnaryOp = UnaryOp;

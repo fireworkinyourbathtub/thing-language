@@ -27,8 +27,9 @@ export interface Expr extends AST {
 
 export enum BinaryOperator {
     Plus, Minus, Star, Slash,
-    Less, Equal, Greater, Bang,
-    LessEqual, EqualEqual, GreaterEqual, BangEqual,
+    Less, Greater,
+    LessEqual, GreaterEqual,
+    EqualEqual, BangEqual,
 }
 
 export enum UnaryOperator {

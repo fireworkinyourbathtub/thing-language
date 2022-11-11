@@ -39,9 +39,7 @@ document.getElementById('submitbutton').addEventListener('click', function () {
     if (parsed) {
         let result = compiler.compile(parsed);
         let ppc = new bytecode.PrettyPrintContext();
-        for (let instr of result) {
-            instr.pretty_print(ppc);
-        }
+        ppc.pretty_print_instrs(result);
         document.getElementById('compiledcodeview').innerHTML = ppc.result;
         console.log(result);
         console.log(ppc.result);

@@ -130,16 +130,34 @@ export class Call implements Instruction {
 export class BinaryOp implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly l: Value, public readonly r: Value, public readonly op: ast.BinaryOperator, public readonly dest: Register) {}
     pretty_print(ppc: PrettyPrintContext) {
-        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span); // TODO
-        throw new Error("not implemented yet");
+        let op_name;
+        switch (this.op) {
+            case ast.BinaryOperator.Plus: op_name = 'add'; break;
+            case ast.BinaryOperator.Minus: op_name = 'sub'; break;
+            case ast.BinaryOperator.Star: op_name = 'mul'; break;
+            case ast.BinaryOperator.Slash: op_name = 'div'; break;
+            case ast.BinaryOperator.Less: op_name = 'cmp<'; break;
+            case ast.BinaryOperator.Greater: op_name = 'cmp>'; break;
+            case ast.BinaryOperator.LessEqual: op_name = 'cmp<='; break;
+            case ast.BinaryOperator.EqualEqual: op_name = 'cmp=='; break;
+            case ast.BinaryOperator.GreaterEqual: op_name = 'cmp>='; break;
+            case ast.BinaryOperator.BangEqual: op_name = 'cmp!='; break;
+        }
+
+        ppc.append(`${op_name} ${this.l.pretty_print()} ${this.r.pretty_print()} -> ${this.dest.pretty_print()};`, this.span);
     }
 }
 
 export class UnaryOp implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly v: Value, public readonly op: ast.UnaryOperator, public readonly dest: Register) {}
     pretty_print(ppc: PrettyPrintContext) {
+        let op_name;
+        switch (this.op) {
+            case ast.UnaryOperator.Minus: op_name = 'neg'; break;
+            case ast.UnaryOperator.Bang: op_name = 'logic_neg'; break;
+        }
         // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span); // TODO
-        throw new Error("not implemented yet");
+        ppc.append(`${op_name} ${this.v.pretty_print()} -> ${this.dest.pretty_print()};`, this.span);
     }
 }
 
