@@ -41,7 +41,8 @@ export class MakeVar implements Instruction {
 export class DefineFun implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly name: string, public readonly params: string[], public readonly instructions: Instruction[]) {}
     pretty_print(ppc: PrettyPrintContext) {
-        ppc.append(`define_function ${this.name}(${this.params}) {`, this.span) // TODO: pretty print params
+        let params_str = '';
+        ppc.append(`define_function ${this.name}(${this.params.join()}) {`, this.span)
         ppc.indent();
         ppc.pretty_print_instrs(this.instructions);
         ppc.dedent();
@@ -123,7 +124,7 @@ export class Assign implements Instruction {
 export class Call implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly callee: Value, public args: Value[], public dest: Register) {}
     pretty_print(ppc: PrettyPrintContext) {
-        ppc.append(`call ${this.callee.pretty_print()}(${this.args}) -> ${this.dest.pretty_print()};`, this.span); // TODO: pretty print args
+        ppc.append(`call ${this.callee.pretty_print()}(${this.args.map(a => a.pretty_print()).join()}) -> ${this.dest.pretty_print()};`, this.span);
     }
 }
 
@@ -156,7 +157,6 @@ export class UnaryOp implements Instruction {
             case ast.UnaryOperator.Minus: op_name = 'neg'; break;
             case ast.UnaryOperator.Bang: op_name = 'logic_neg'; break;
         }
-        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span); // TODO
         ppc.append(`${op_name} ${this.v.pretty_print()} -> ${this.dest.pretty_print()};`, this.span);
     }
 }

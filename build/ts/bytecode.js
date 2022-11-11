@@ -74,7 +74,8 @@ class DefineFun {
         this.instructions = instructions;
     }
     pretty_print(ppc) {
-        ppc.append(`define_function ${this.name}(${this.params}) {`, this.span); // TODO: pretty print params
+        let params_str = '';
+        ppc.append(`define_function ${this.name}(${this.params.join()}) {`, this.span);
         ppc.indent();
         ppc.pretty_print_instrs(this.instructions);
         ppc.dedent();
@@ -187,7 +188,7 @@ class Call {
         this.dest = dest;
     }
     pretty_print(ppc) {
-        ppc.append(`call ${this.callee.pretty_print()}(${this.args}) -> ${this.dest.pretty_print()};`, this.span); // TODO: pretty print args
+        ppc.append(`call ${this.callee.pretty_print()}(${this.args.map(a => a.pretty_print()).join()}) -> ${this.dest.pretty_print()};`, this.span);
     }
 }
 exports.Call = Call;
@@ -254,7 +255,6 @@ class UnaryOp {
                 op_name = 'logic_neg';
                 break;
         }
-        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span); // TODO
         ppc.append(`${op_name} ${this.v.pretty_print()} -> ${this.dest.pretty_print()};`, this.span);
     }
 }
