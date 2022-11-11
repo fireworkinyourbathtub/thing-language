@@ -137,9 +137,9 @@ let statement;
 let statement_indirect = () => statement;
 let declaration;
 let declaration_indirect = () => declaration;
-let for_stmt = new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Token("'for'"), new peg.Token("'('")), new peg.Choice(new peg.Choice(new peg.Indirect(() => var_decl), expr_stmt), new peg.Token("';'").apply(() => null))), new peg.Chain(new peg.Optional(new peg.Indirect(expression_indirect)), new peg.Token("';'"))), new peg.Chain(new peg.Optional(new peg.Indirect(expression_indirect)), new peg.Token("';'"))), new peg.Token("')'")), new peg.Indirect(statement_indirect))
+let for_stmt = new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Token("'for'"), new peg.Token("'('")), new peg.Choice(new peg.Choice(new peg.Indirect(() => var_decl), expr_stmt), new peg.Token("';'").apply(() => null))), new peg.Chain(new peg.Optional(new peg.Indirect(expression_indirect)), new peg.Token("';'"))), new peg.Optional(new peg.Indirect(expression_indirect))), new peg.Token("')'")), new peg.Indirect(statement_indirect))
     .apply(([[[[[[for_, oparen], initializer], cond], inc], cparen], body]) => {
-    return new ast.ForStmt(diagnostics.join_spans(for_.span, body.span), initializer, cond[0], inc[0], body);
+    return new ast.ForStmt(diagnostics.join_spans(for_.span, body.span), initializer, cond[0], inc, body);
 });
 let if_stmt = new peg.Apply(([[[[[if_, oparen], cond], cparen], body], m_else]) => new ast.IfStmt(diagnostics.join_spans(if_.span, m_else ? m_else[1].span : body.span), cond, body, m_else ? m_else[1] : null), new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Token("'if'"), new peg.Token("'('")), new peg.Indirect(expression_indirect)), new peg.Token("')'")), new peg.Indirect(statement_indirect)), new peg.Optional(new peg.Chain(new peg.Token("'else'"), new peg.Indirect(statement_indirect)))));
 let return_stmt = new peg.Apply(([[return_, m_expr], semi]) => new ast.ReturnStmt(diagnostics.join_spans(return_.span, semi.span), m_expr), new peg.Chain(new peg.Chain(new peg.Token("'return'"), new peg.Optional(new peg.Indirect(expression_indirect))), new peg.Token("';'")));

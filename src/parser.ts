@@ -163,11 +163,11 @@ let for_stmt: peg.PEG<ast.ForStmt> =
         new peg.Token("'('")),
         new peg.Choice(new peg.Choice(new peg.Indirect(() => var_decl!), expr_stmt), new peg.Token("';'").apply(() => null))),
         new peg.Chain(new peg.Optional(new peg.Indirect(expression_indirect)), new peg.Token("';'"))),
-        new peg.Chain(new peg.Optional(new peg.Indirect(expression_indirect)), new peg.Token("';'"))),
+        new peg.Optional(new peg.Indirect(expression_indirect))),
         new peg.Token("')'")),
         new peg.Indirect(statement_indirect))
         .apply(([[[[[[for_, oparen], initializer], cond], inc], cparen], body]) => {
-            return new ast.ForStmt(diagnostics.join_spans(for_.span, body.span), initializer, cond[0], inc[0], body);
+            return new ast.ForStmt(diagnostics.join_spans(for_.span, body.span), initializer, cond[0], inc, body);
         })
 
 let if_stmt =
