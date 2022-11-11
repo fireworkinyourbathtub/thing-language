@@ -5,16 +5,19 @@ class Register {
     constructor(index) {
         this.index = index;
     }
+    pretty_print() { return `%${this.index}`; }
 }
 exports.Register = Register;
 class Nil {
     constructor() { }
+    pretty_print() { return `nil`; }
 }
 exports.Nil = Nil;
 class Constant {
     constructor(x) {
         this.x = x;
     }
+    pretty_print() { return this.x; }
 }
 exports.Constant = Constant;
 class Print {
@@ -23,7 +26,7 @@ class Print {
         this.expr = expr;
     }
     pretty_print() {
-        return `print ${this.expr};`;
+        return `print ${this.expr.pretty_print()};`;
     }
 }
 exports.Print = Print;
@@ -34,7 +37,7 @@ class MakeVar {
         this.value = value;
     }
     pretty_print() {
-        return `make_var ${this.name} = ${this.value};`;
+        return `make_var ${this.name} = ${this.value.pretty_print()};`;
     }
 }
 exports.MakeVar = MakeVar;
@@ -46,7 +49,7 @@ class DefineFun {
         this.instructions = instructions;
     }
     pretty_print() {
-        return `define_function ${this.name} (${this.params}) { /* TODO */ };`;
+        return `define_function ${this.name} (${this.params}) { /* TODO */ };`; // TODO: pretty print params
     }
 }
 exports.DefineFun = DefineFun;
@@ -58,7 +61,7 @@ class While {
         this.body_code = body_code;
     }
     pretty_print() {
-        return `while ${this.check} { /* TODO */ };`;
+        return `while ${this.check.pretty_print()} { /* TODO */ };`; // TODO
     }
 }
 exports.While = While;
@@ -70,7 +73,7 @@ class If {
         this.false_branch = false_branch;
     }
     pretty_print() {
-        return `if ${this.cond} { /* TODO */ };`;
+        return `if ${this.cond.pretty_print()} { /* TODO */ };`; // TODO
     }
 }
 exports.If = If;
@@ -80,7 +83,7 @@ class Return {
         this.v = v;
     }
     pretty_print() {
-        return `return ${this.v};`;
+        return `return ${this.v.pretty_print()};`;
     }
 }
 exports.Return = Return;
@@ -109,7 +112,7 @@ class ReadVar {
         this.dest = dest;
     }
     pretty_print() {
-        return `read_var ${this.v} -> ${this.dest};`;
+        return `read_var ${this.v} -> ${this.dest.pretty_print()};`;
     }
 }
 exports.ReadVar = ReadVar;
@@ -120,7 +123,7 @@ class Assign {
         this.value = value;
     }
     pretty_print() {
-        return `assign ${this.variable} = ${this.value};`;
+        return `assign ${this.variable} = ${this.value.pretty_print()};`;
     }
 }
 exports.Assign = Assign;
@@ -132,7 +135,7 @@ class Call {
         this.dest = dest;
     }
     pretty_print() {
-        return `call ${this.callee}(${this.args}) -> ${this.dest};`;
+        return `call ${this.callee.pretty_print()}(${this.args}) -> ${this.dest.pretty_print()};`; // TODO: pretty print args
     }
 }
 exports.Call = Call;
