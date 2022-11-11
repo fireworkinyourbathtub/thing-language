@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReadVar = exports.EndScope = exports.StartScope = exports.Return = exports.If = exports.While = exports.DefineFun = exports.MakeVar = exports.Print = exports.Constant = exports.Nil = exports.Register = void 0;
+exports.UnaryOp = exports.BinaryOp = exports.Call = exports.Assign = exports.ReadVar = exports.EndScope = exports.StartScope = exports.Return = exports.If = exports.While = exports.DefineFun = exports.MakeVar = exports.Print = exports.Constant = exports.Nil = exports.Register = void 0;
 class Register {
     constructor(index) {
         this.index = index;
@@ -113,3 +113,53 @@ class ReadVar {
     }
 }
 exports.ReadVar = ReadVar;
+class Assign {
+    constructor(span, variable, value) {
+        this.span = span;
+        this.variable = variable;
+        this.value = value;
+    }
+    pretty_print() {
+        return `assign ${this.variable} = ${this.value};`;
+    }
+}
+exports.Assign = Assign;
+class Call {
+    constructor(span, callee, args, dest) {
+        this.span = span;
+        this.callee = callee;
+        this.args = args;
+        this.dest = dest;
+    }
+    pretty_print() {
+        return `call ${this.callee}(${this.args}) -> ${this.dest};`;
+    }
+}
+exports.Call = Call;
+class BinaryOp {
+    constructor(span, l, r, op, dest) {
+        this.span = span;
+        this.l = l;
+        this.r = r;
+        this.op = op;
+        this.dest = dest;
+    }
+    pretty_print() {
+        // return `call ${this.callee}(${this.args}) -> ${this.dest};`;
+        throw new Error("not implemented yet");
+    }
+}
+exports.BinaryOp = BinaryOp;
+class UnaryOp {
+    constructor(span, v, op, dest) {
+        this.span = span;
+        this.v = v;
+        this.op = op;
+        this.dest = dest;
+    }
+    pretty_print() {
+        // return `call ${this.callee}(${this.args}) -> ${this.dest};`;
+        throw new Error("not implemented yet");
+    }
+}
+exports.UnaryOp = UnaryOp;

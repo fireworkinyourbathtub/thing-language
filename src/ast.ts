@@ -70,7 +70,7 @@ export class NilLiteral implements Expr {
     accept<T>(visitor: ExprVisitor<T>) { return visitor.visitNilLiteral(this); }
 }
 export class AssignExpr implements Expr {
-    constructor(public span: diagnostics.Span, public name: string, value: Expr) {}
+    constructor(public span: diagnostics.Span, public name: string, public value: Expr) {}
     accept<T>(visitor: ExprVisitor<T>) { return visitor.visitAssignExpr(this); }
 }
 export class CallExpr implements Expr {

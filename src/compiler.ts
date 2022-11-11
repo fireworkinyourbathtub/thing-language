@@ -129,11 +129,20 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
     }
 
     visitBinaryExpr(expr: ast.BinaryExpr): bytecode.Value {
-        throw new Error("not implemented yet"); // TODO
+        let l = this.compile_expr(expr.left);
+        let r = this.compile_expr(expr.right);
+
+        let reg = this.register_context.new_register();
+
+        this.instruction(new bytecode.BinaryOp(expr.span, l, r, expr.op, reg));
+        return reg;
     }
 
     visitUnaryExpr(expr: ast.UnaryExpr): bytecode.Value {
-        throw new Error("not implemented yet"); // TODO
+        let v = this.compile_expr(expr.operand);
+        let reg = this.register_context.new_register();
+        this.instruction(new bytecode.UnaryOp(expr.span, v, expr.operator, reg));
+        return reg;
     }
 
     visitVarExpr(expr: ast.VarExpr): bytecode.Value {
@@ -159,11 +168,22 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
     }
 
     visitAssignExpr(expr: ast.AssignExpr): bytecode.Value {
-        throw new Error("not implemented yet"); // TODO
+        let v = this.compile_expr(expr.value);
+        this.instruction(new bytecode.Assign(expr.span, expr.name, v));
+        return v;
     }
 
     visitCallExpr(expr: ast.CallExpr): bytecode.Value {
-        throw new Error("not implemented yet"); // TODO
+        let callee = this.compile_expr(expr.callee);
+
+        let args = [];
+        for (let a_ast of expr.args) {
+            args.push(this.compile_expr(a_ast));
+        }
+
+        let reg = this.register_context.new_register();
+        this.instruction(new bytecode.Call(expr.span, callee, args, reg));
+        return reg;
     }
 
     visitLogicalExpr(expr: ast.LogicalExpr): bytecode.Value {

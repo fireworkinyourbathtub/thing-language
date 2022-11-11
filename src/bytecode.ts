@@ -1,4 +1,5 @@
 import * as diagnostics from './diagnostics';
+import * as ast from './ast';
 
 export interface Instruction {
     readonly span: diagnostics.Span;
@@ -79,5 +80,35 @@ export class ReadVar implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly v: string, public readonly dest: Register) {}
     pretty_print(): string {
         return `read_var ${this.v} -> ${this.dest};`;
+    }
+}
+
+export class Assign implements Instruction {
+    constructor(public readonly span: diagnostics.Span, public readonly variable: string, public value: Value) {}
+    pretty_print(): string {
+        return `assign ${this.variable} = ${this.value};`;
+    }
+}
+
+export class Call implements Instruction {
+    constructor(public readonly span: diagnostics.Span, public readonly callee: Value, public args: Value[], public dest: Register) {}
+    pretty_print(): string {
+        return `call ${this.callee}(${this.args}) -> ${this.dest};`;
+    }
+}
+
+export class BinaryOp implements Instruction {
+    constructor(public readonly span: diagnostics.Span, public readonly l: Value, public readonly r: Value, public readonly op: ast.BinaryOperator, public readonly dest: Register) {}
+    pretty_print(): string {
+        // return `call ${this.callee}(${this.args}) -> ${this.dest};`;
+        throw new Error("not implemented yet");
+    }
+}
+
+export class UnaryOp implements Instruction {
+    constructor(public readonly span: diagnostics.Span, public readonly v: Value, public readonly op: ast.UnaryOperator, public readonly dest: Register) {}
+    pretty_print(): string {
+        // return `call ${this.callee}(${this.args}) -> ${this.dest};`;
+        throw new Error("not implemented yet");
     }
 }

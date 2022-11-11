@@ -18,6 +18,12 @@ document.getElementById('submitbutton')!.addEventListener('click', function() {
     let parsed = parser.parse(lexed);
     if (parsed) {
         let result = compiler.compile(parsed);
+        let s = "";
+        for (let instr of result) {
+            s += instr.pretty_print();
+            s += '\n';
+        }
+        document.getElementById('compiledcodeview')!.innerHTML = s;
         console.log(result);
     }
 });

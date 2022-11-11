@@ -88,6 +88,7 @@ class AssignExpr {
     constructor(span, name, value) {
         this.span = span;
         this.name = name;
+        this.value = value;
     }
     accept(visitor) { return visitor.visitAssignExpr(this); }
 }

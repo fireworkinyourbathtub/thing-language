@@ -127,10 +127,17 @@ class Compiler {
         this.instruction(new bytecode.While(stmt.span, check_compiler.instructions, check, body_compiler.instructions));
     }
     visitBinaryExpr(expr) {
-        throw new Error("not implemented yet"); // TODO
+        let l = this.compile_expr(expr.left);
+        let r = this.compile_expr(expr.right);
+        let reg = this.register_context.new_register();
+        this.instruction(new bytecode.BinaryOp(expr.span, l, r, expr.op, reg));
+        return reg;
     }
     visitUnaryExpr(expr) {
-        throw new Error("not implemented yet"); // TODO
+        let v = this.compile_expr(expr.operand);
+        let reg = this.register_context.new_register();
+        this.instruction(new bytecode.UnaryOp(expr.span, v, expr.operator, reg));
+        return reg;
     }
     visitVarExpr(expr) {
         let reg = this.register_context.new_register();
@@ -150,10 +157,19 @@ class Compiler {
         return new bytecode.Nil();
     }
     visitAssignExpr(expr) {
-        throw new Error("not implemented yet"); // TODO
+        let v = this.compile_expr(expr.value);
+        this.instruction(new bytecode.Assign(expr.span, expr.name, v));
+        return v;
     }
     visitCallExpr(expr) {
-        throw new Error("not implemented yet"); // TODO
+        let callee = this.compile_expr(expr.callee);
+        let args = [];
+        for (let a_ast of expr.args) {
+            args.push(this.compile_expr(a_ast));
+        }
+        let reg = this.register_context.new_register();
+        this.instruction(new bytecode.Call(expr.span, callee, args, reg));
+        return reg;
     }
     visitLogicalExpr(expr) {
         throw new Error("not implemented yet"); // TODO
