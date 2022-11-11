@@ -89,15 +89,19 @@ let call = primary.chain(new peg.ZeroMore(new peg.Choice(new peg.Token("'('").ch
     while (cur_op = ops.shift()) {
         if (cur_op instanceof lexer.Identifier) {
             let ident = cur_op;
+            // expr =
+            throw new Error("not implemented yet"); // TODO
         }
         else {
-            let args;
-            if (cur_op == null) {
-                args = [];
+            console.log(cur_op);
+            let a;
+            if (cur_op) {
+                a = cur_op;
             }
             else {
-                args = cur_op[1];
+                a = [];
             }
+            expr = new ast.CallExpr(expr.span, expr, a); // TODO: better span
         }
     }
     return expr;

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.report = exports.join_spans = exports.clear = exports.Span = void 0;
+exports.report = exports.join_spans = exports.clear = exports.get_line = exports.Span = void 0;
 const errors_div = document.getElementById('errors');
 class Span {
     constructor(source, start, end) {
@@ -9,6 +9,7 @@ class Span {
         this.end = end;
         [this.start_line, this.start_column] = get_linecol(source, start);
         [this.end_line, this.end_column] = get_linecol(source, end);
+        this.contents = source.substring(start, end);
     }
 }
 exports.Span = Span;
@@ -22,6 +23,10 @@ function get_linecol(source, ind) {
         return [line, 0];
     }
 }
+function get_line(source, line) {
+    return source.split('\n')[line - 1];
+}
+exports.get_line = get_line;
 function clear() {
     while (errors_div.lastChild) {
         errors_div.removeChild(errors_div.lastChild);

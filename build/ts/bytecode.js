@@ -1,6 +1,30 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UnaryOp = exports.BinaryOp = exports.Call = exports.Assign = exports.ReadVar = exports.EndScope = exports.StartScope = exports.Return = exports.If = exports.While = exports.DefineFun = exports.MakeVar = exports.Print = exports.Constant = exports.Nil = exports.Register = void 0;
+exports.PrettyPrintContext = exports.StmtMarker = exports.UnaryOp = exports.BinaryOp = exports.Call = exports.Assign = exports.ReadVar = exports.EndScope = exports.StartScope = exports.Return = exports.If = exports.While = exports.DefineFun = exports.MakeVar = exports.Print = exports.Constant = exports.Nil = exports.Register = void 0;
+const diagnostics = __importStar(require("./diagnostics"));
 class Register {
     constructor(index) {
         this.index = index;
@@ -25,8 +49,8 @@ class Print {
         this.span = span;
         this.expr = expr;
     }
-    pretty_print() {
-        return `print ${this.expr.pretty_print()};`;
+    pretty_print(ppc) {
+        ppc.append(`print ${this.expr.pretty_print()};`, this.span);
     }
 }
 exports.Print = Print;
@@ -36,8 +60,8 @@ class MakeVar {
         this.name = name;
         this.value = value;
     }
-    pretty_print() {
-        return `make_var ${this.name} = ${this.value.pretty_print()};`;
+    pretty_print(ppc) {
+        ppc.append(`make_var ${this.name} = ${this.value.pretty_print()};`, this.span);
     }
 }
 exports.MakeVar = MakeVar;
@@ -48,8 +72,8 @@ class DefineFun {
         this.params = params;
         this.instructions = instructions;
     }
-    pretty_print() {
-        return `define_function ${this.name} (${this.params}) { /* TODO */ };`; // TODO: pretty print params
+    pretty_print(ppc) {
+        ppc.append(`define_function ${this.name} (${this.params}) { /* TODO */ };`, this.span); // TODO: pretty print params
     }
 }
 exports.DefineFun = DefineFun;
@@ -60,8 +84,18 @@ class While {
         this.check = check;
         this.body_code = body_code;
     }
-    pretty_print() {
-        return `while ${this.check.pretty_print()} { /* TODO */ };`; // TODO
+    pretty_print(ppc) {
+        ppc.append('while {', this.span);
+        ppc.indent();
+        ppc.pretty_print_instrs(this.check_code);
+        ppc.append_no_span(`check ${this.check.pretty_print()}`);
+        ppc.dedent();
+        ppc.append_no_span('}');
+        ppc.append_no_span('{');
+        ppc.indent();
+        ppc.pretty_print_instrs(this.body_code);
+        ppc.dedent();
+        ppc.append_no_span('}');
     }
 }
 exports.While = While;
@@ -72,8 +106,8 @@ class If {
         this.true_branch = true_branch;
         this.false_branch = false_branch;
     }
-    pretty_print() {
-        return `if ${this.cond.pretty_print()} { /* TODO */ };`; // TODO
+    pretty_print(ppc) {
+        ppc.append(`if ${this.cond.pretty_print()} { /* TODO */ };`, this.span); // TODO
     }
 }
 exports.If = If;
@@ -82,8 +116,8 @@ class Return {
         this.span = span;
         this.v = v;
     }
-    pretty_print() {
-        return `return ${this.v.pretty_print()};`;
+    pretty_print(ppc) {
+        ppc.append(`return ${this.v.pretty_print()};`, this.span);
     }
 }
 exports.Return = Return;
@@ -91,8 +125,8 @@ class StartScope {
     constructor(span) {
         this.span = span;
     }
-    pretty_print() {
-        return `start_scope;`;
+    pretty_print(ppc) {
+        ppc.append(`start_scope;`, this.span);
     }
 }
 exports.StartScope = StartScope;
@@ -100,8 +134,8 @@ class EndScope {
     constructor(span) {
         this.span = span;
     }
-    pretty_print() {
-        return `end_scope;`;
+    pretty_print(ppc) {
+        ppc.append(`end_scope;`, this.span);
     }
 }
 exports.EndScope = EndScope;
@@ -111,8 +145,8 @@ class ReadVar {
         this.v = v;
         this.dest = dest;
     }
-    pretty_print() {
-        return `read_var ${this.v} -> ${this.dest.pretty_print()};`;
+    pretty_print(ppc) {
+        ppc.append(`read_var ${this.v} -> ${this.dest.pretty_print()};`, this.span);
     }
 }
 exports.ReadVar = ReadVar;
@@ -122,8 +156,8 @@ class Assign {
         this.variable = variable;
         this.value = value;
     }
-    pretty_print() {
-        return `assign ${this.variable} = ${this.value.pretty_print()};`;
+    pretty_print(ppc) {
+        ppc.append(`assign ${this.variable} = ${this.value.pretty_print()};`, this.span);
     }
 }
 exports.Assign = Assign;
@@ -134,8 +168,8 @@ class Call {
         this.args = args;
         this.dest = dest;
     }
-    pretty_print() {
-        return `call ${this.callee.pretty_print()}(${this.args}) -> ${this.dest.pretty_print()};`; // TODO: pretty print args
+    pretty_print(ppc) {
+        ppc.append(`call ${this.callee.pretty_print()}(${this.args}) -> ${this.dest.pretty_print()};`, this.span); // TODO: pretty print args
     }
 }
 exports.Call = Call;
@@ -147,8 +181,8 @@ class BinaryOp {
         this.op = op;
         this.dest = dest;
     }
-    pretty_print() {
-        // return `call ${this.callee}(${this.args}) -> ${this.dest};`;
+    pretty_print(ppc) {
+        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span);
         throw new Error("not implemented yet");
     }
 }
@@ -160,9 +194,51 @@ class UnaryOp {
         this.op = op;
         this.dest = dest;
     }
-    pretty_print() {
-        // return `call ${this.callee}(${this.args}) -> ${this.dest};`;
+    pretty_print(ppc) {
+        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span);
         throw new Error("not implemented yet");
     }
 }
 exports.UnaryOp = UnaryOp;
+class StmtMarker {
+    constructor(span) {
+        this.span = span;
+    }
+    pretty_print(ppc) {
+        ppc.append_marker(`// line ${this.span.start_line}: ${diagnostics.get_line(this.span.source, this.span.start_line)}`);
+    }
+}
+exports.StmtMarker = StmtMarker;
+class PrettyPrintContext {
+    constructor() {
+        this.indentation = 0;
+        this.result = '';
+    }
+    indent() {
+        ++this.indentation;
+    }
+    dedent() {
+        --this.indentation;
+    }
+    blank_line() {
+        this.result += '\n';
+    }
+    append(s, sp) {
+        let sp_contents = sp.contents;
+        let sp_annotation = sp_contents.split('\n').length > 1 ? `${sp_contents.split('\n')[0]}...` : sp_contents;
+        this.append_no_span(`${s}${' '.repeat(40 - s.length)}// ${sp_annotation}`);
+    }
+    append_no_span(s) {
+        this.result += `${' '.repeat(this.indentation * 4)}${s}\n`;
+    }
+    append_marker(s) {
+        this.blank_line();
+        this.append_no_span(s);
+    }
+    pretty_print_instrs(instrs) {
+        for (let instr of instrs) {
+            instr.pretty_print(this);
+        }
+    }
+}
+exports.PrettyPrintContext = PrettyPrintContext;

@@ -2,7 +2,7 @@ import * as diagnostics from './diagnostics';
 import * as ast from './ast';
 
 export interface Instruction extends diagnostics.Located {
-    pretty_print(): string;
+    pretty_print(ppc: PrettyPrintContext): void;
 }
 
 export interface Value {
@@ -26,93 +26,153 @@ export class Constant<T> implements Value {
 
 export class Print implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly expr: Value) {}
-    pretty_print(): string {
-        return `print ${this.expr.pretty_print()};`;
+    pretty_print(ppc: PrettyPrintContext) {
+        ppc.append(`print ${this.expr.pretty_print()};`, this.span);
     }
 }
 
 export class MakeVar implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly name: string, public readonly value: Value) {}
-    pretty_print(): string {
-        return `make_var ${this.name} = ${this.value.pretty_print()};`;
+    pretty_print(ppc: PrettyPrintContext) {
+        ppc.append(`make_var ${this.name} = ${this.value.pretty_print()};`, this.span);
     }
 }
 
 export class DefineFun implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly name: string, public readonly params: string[], public readonly instructions: Instruction[]) {}
-    pretty_print(): string {
-        return `define_function ${this.name} (${this.params}) { /* TODO */ };`; // TODO: pretty print params
+    pretty_print(ppc: PrettyPrintContext) {
+        ppc.append(`define_function ${this.name} (${this.params}) { /* TODO */ };`, this.span); // TODO: pretty print params
     }
 }
 
 export class While implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly check_code: Instruction[], public readonly check: Value, public readonly body_code: Instruction[]) {}
-    pretty_print(): string {
-        return `while ${this.check.pretty_print()} { /* TODO */ };`; // TODO
+    pretty_print(ppc: PrettyPrintContext) {
+        ppc.append('while {', this.span);
+        ppc.indent();
+        ppc.pretty_print_instrs(this.check_code);
+        ppc.append_no_span(`check ${this.check.pretty_print()}`);
+        ppc.dedent();
+        ppc.append_no_span('}');
+        ppc.append_no_span('{');
+        ppc.indent();
+        ppc.pretty_print_instrs(this.body_code);
+        ppc.dedent();
+        ppc.append_no_span('}');
     }
 }
 
 export class If implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly cond: Value, public readonly true_branch: Instruction[], public readonly false_branch: Instruction[] | null) {}
-    pretty_print(): string {
-        return `if ${this.cond.pretty_print()} { /* TODO */ };`; // TODO
+    pretty_print(ppc: PrettyPrintContext) {
+        ppc.append(`if ${this.cond.pretty_print()} { /* TODO */ };`, this.span); // TODO
     }
 }
 
 export class Return implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly v: Value) {}
-    pretty_print(): string {
-        return `return ${this.v.pretty_print()};`;
+    pretty_print(ppc: PrettyPrintContext) {
+        ppc.append(`return ${this.v.pretty_print()};`, this.span);
     }
 }
 
 export class StartScope implements Instruction {
     constructor(public readonly span: diagnostics.Span) {}
-    pretty_print(): string {
-        return `start_scope;`;
+    pretty_print(ppc: PrettyPrintContext) {
+        ppc.append(`start_scope;`, this.span);
     }
 }
 
 export class EndScope implements Instruction {
     constructor(public readonly span: diagnostics.Span) {}
-    pretty_print(): string {
-        return `end_scope;`;
+    pretty_print(ppc: PrettyPrintContext) {
+        ppc.append(`end_scope;`, this.span);
     }
 }
 
 export class ReadVar implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly v: string, public readonly dest: Register) {}
-    pretty_print(): string {
-        return `read_var ${this.v} -> ${this.dest.pretty_print()};`;
+    pretty_print(ppc: PrettyPrintContext) {
+        ppc.append(`read_var ${this.v} -> ${this.dest.pretty_print()};`, this.span);
     }
 }
 
 export class Assign implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly variable: string, public value: Value) {}
-    pretty_print(): string {
-        return `assign ${this.variable} = ${this.value.pretty_print()};`;
+    pretty_print(ppc: PrettyPrintContext) {
+        ppc.append(`assign ${this.variable} = ${this.value.pretty_print()};`, this.span);
     }
 }
 
 export class Call implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly callee: Value, public args: Value[], public dest: Register) {}
-    pretty_print(): string {
-        return `call ${this.callee.pretty_print()}(${this.args}) -> ${this.dest.pretty_print()};`; // TODO: pretty print args
+    pretty_print(ppc: PrettyPrintContext) {
+        ppc.append(`call ${this.callee.pretty_print()}(${this.args}) -> ${this.dest.pretty_print()};`, this.span); // TODO: pretty print args
     }
 }
 
 export class BinaryOp implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly l: Value, public readonly r: Value, public readonly op: ast.BinaryOperator, public readonly dest: Register) {}
-    pretty_print(): string {
-        // return `call ${this.callee}(${this.args}) -> ${this.dest};`;
+    pretty_print(ppc: PrettyPrintContext) {
+        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span);
         throw new Error("not implemented yet");
     }
 }
 
 export class UnaryOp implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly v: Value, public readonly op: ast.UnaryOperator, public readonly dest: Register) {}
-    pretty_print(): string {
-        // return `call ${this.callee}(${this.args}) -> ${this.dest};`;
+    pretty_print(ppc: PrettyPrintContext) {
+        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span);
         throw new Error("not implemented yet");
+    }
+}
+
+export class StmtMarker implements Instruction {
+    constructor(public readonly span: diagnostics.Span) {}
+    pretty_print(ppc: PrettyPrintContext) {
+        ppc.append_marker(`// line ${this.span.start_line}: ${diagnostics.get_line(this.span.source, this.span.start_line)}`);
+    }
+}
+
+export class PrettyPrintContext {
+    indentation: number;
+    result: string;
+
+    constructor() {
+        this.indentation = 0;
+        this.result = '';
+    }
+
+    indent() {
+        ++this.indentation;
+    }
+
+    dedent() {
+        --this.indentation;
+    }
+
+    blank_line() {
+        this.result += '\n';
+    }
+
+    append(s: string, sp: diagnostics.Span) {
+        let sp_contents = sp.contents;
+        let sp_annotation = sp_contents.split('\n').length > 1 ? `${sp_contents.split('\n')[0]}...` : sp_contents;
+        this.append_no_span(`${s}${' '.repeat(40 - s.length)}// ${sp_annotation}`);
+    }
+
+    append_no_span(s: string) {
+        this.result += `${' '.repeat(this.indentation * 4)}${s}\n`;
+    }
+
+    append_marker(s: string) {
+        this.blank_line();
+        this.append_no_span(s);
+    }
+
+    pretty_print_instrs(instrs: Instruction[]) {
+        for (let instr of instrs) {
+            instr.pretty_print(this);
+        }
     }
 }

@@ -24,6 +24,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const diagnostics = __importStar(require("./diagnostics"));
+const bytecode = __importStar(require("./bytecode"));
 const lexer = __importStar(require("./lexer"));
 const parser = __importStar(require("./parser"));
 const compiler = __importStar(require("./compiler"));
@@ -37,12 +38,12 @@ document.getElementById('submitbutton').addEventListener('click', function () {
     let parsed = parser.parse(lexed);
     if (parsed) {
         let result = compiler.compile(parsed);
-        let s = "";
+        let ppc = new bytecode.PrettyPrintContext();
         for (let instr of result) {
-            s += instr.pretty_print();
-            s += '\n';
+            instr.pretty_print(ppc);
         }
-        document.getElementById('compiledcodeview').innerHTML = s;
+        document.getElementById('compiledcodeview').innerHTML = ppc.result;
         console.log(result);
+        console.log(ppc.result);
     }
 });

@@ -5,10 +5,12 @@ export class Span {
     start_column: number;
     end_line: number;
     end_column: number;
+    contents: string;
 
     constructor(public source: string, public start: number, public end: number) {
         [this.start_line, this.start_column] = get_linecol(source, start);
         [this.end_line, this.end_column] = get_linecol(source, end);
+        this.contents = source.substring(start, end);
     }
 }
 
@@ -21,6 +23,10 @@ function get_linecol(source: string, ind: number): [number, number] {
     } else {
         return [line, 0];
     }
+}
+
+export function get_line(source: string, line: number): string {
+    return source.split('\n')[line - 1];
 }
 
 export interface Located {

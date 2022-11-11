@@ -62,10 +62,14 @@ let call: peg.PEG<ast.Expr> =
         while (cur_op = ops.shift()) {
             if (cur_op instanceof lexer.Identifier) {
                 let ident = cur_op;
+                // expr =
+                throw new Error("not implemented yet"); // TODO
             } else {
-                let args;
-                if (cur_op == null) { args = []; }
-                else { args = cur_op[1]; }
+                console.log(cur_op);
+                let a: ast.Expr[];
+                if (cur_op) { a = cur_op; }
+                else { a = []; }
+                expr = new ast.CallExpr(expr.span, expr, a); // TODO: better span
             }
         }
         return expr;

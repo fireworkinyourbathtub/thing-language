@@ -1,4 +1,5 @@
 import * as diagnostics from './diagnostics';
+import * as bytecode from './bytecode';
 import * as lexer from './lexer';
 import * as parser from './parser';
 import * as compiler from './compiler';
@@ -18,12 +19,12 @@ document.getElementById('submitbutton')!.addEventListener('click', function() {
     let parsed = parser.parse(lexed);
     if (parsed) {
         let result = compiler.compile(parsed);
-        let s = "";
+        let ppc = new bytecode.PrettyPrintContext();
         for (let instr of result) {
-            s += instr.pretty_print();
-            s += '\n';
+            instr.pretty_print(ppc);
         }
-        document.getElementById('compiledcodeview')!.innerHTML = s;
+        document.getElementById('compiledcodeview')!.innerHTML = ppc.result;
         console.log(result);
+        console.log(ppc.result);
     }
 });

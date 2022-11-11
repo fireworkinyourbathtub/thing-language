@@ -29,16 +29,23 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
         return expr.accept(this);
     }
 
+    make_stmt_marker(stmt: ast.Stmt) {
+        this.instruction(new bytecode.StmtMarker(stmt.span));
+    }
+
     visitExprStmt(stmt: ast.ExprStmt) {
+        this.make_stmt_marker(stmt);
         this.compile_expr(stmt.expr);
     }
 
-    visitPrintStmt(stmt: ast.PrintStmt & diagnostics.Located) {
+    visitPrintStmt(stmt: ast.PrintStmt) {
+        this.make_stmt_marker(stmt);
         let e = this.compile_expr(stmt.expr);
         this.instruction(new bytecode.Print(stmt.span, e));
     }
 
     visitVarStmt(stmt: ast.VarStmt) {
+        this.make_stmt_marker(stmt);
         let e;
         if (stmt.initializer) {
             e = this.compile_expr(stmt.initializer);
@@ -50,6 +57,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
     }
 
     visitBlockStmt(stmt: ast.BlockStmt) {
+        this.make_stmt_marker(stmt);
         this.instruction(new bytecode.StartScope(stmt.span)); // TODO: better span?
         for (let sub_stmt of stmt.stmts) {
             sub_stmt.accept(this);
@@ -58,6 +66,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
     }
 
     visitFunctionStmt(stmt: ast.FunctionStmt) {
+        this.make_stmt_marker(stmt);
         let register_context = new RegisterContext();
         let fn_compiler = new Compiler(register_context);
         fn_compiler.compile_stmt(stmt.body);
@@ -66,6 +75,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
     }
 
     visitForStmt(stmt: ast.ForStmt) {
+        this.make_stmt_marker(stmt);
         this.instruction(new bytecode.StartScope(stmt.span)); // TODO: better span?
         if (stmt.initializer) {
             this.compile_stmt(stmt.initializer);
@@ -91,6 +101,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
     }
 
     visitIfStmt(stmt: ast.IfStmt) {
+        this.make_stmt_marker(stmt);
         let cond = this.compile_expr(stmt.condition);
 
         let true_compiler = new Compiler(this.register_context);
@@ -108,6 +119,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
     }
 
     visitReturnStmt(stmt: ast.ReturnStmt) {
+        this.make_stmt_marker(stmt);
         let e;
         if (stmt.value) {
             e = this.compile_expr(stmt.value);
@@ -119,6 +131,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
     }
 
     visitWhileStmt(stmt: ast.WhileStmt) {
+        this.make_stmt_marker(stmt);
         let check_compiler = new Compiler(this.register_context);
         let check = check_compiler.compile_expr(stmt.condition);
 
@@ -174,6 +187,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
     }
 
     visitCallExpr(expr: ast.CallExpr): bytecode.Value {
+        console.log(expr);
         let callee = this.compile_expr(expr.callee);
 
         let args = [];

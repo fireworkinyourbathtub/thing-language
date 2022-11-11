@@ -44,14 +44,20 @@ class Compiler {
     compile_expr(expr) {
         return expr.accept(this);
     }
+    make_stmt_marker(stmt) {
+        this.instruction(new bytecode.StmtMarker(stmt.span));
+    }
     visitExprStmt(stmt) {
+        this.make_stmt_marker(stmt);
         this.compile_expr(stmt.expr);
     }
     visitPrintStmt(stmt) {
+        this.make_stmt_marker(stmt);
         let e = this.compile_expr(stmt.expr);
         this.instruction(new bytecode.Print(stmt.span, e));
     }
     visitVarStmt(stmt) {
+        this.make_stmt_marker(stmt);
         let e;
         if (stmt.initializer) {
             e = this.compile_expr(stmt.initializer);
@@ -62,6 +68,7 @@ class Compiler {
         this.instruction(new bytecode.MakeVar(stmt.span, stmt.name, e));
     }
     visitBlockStmt(stmt) {
+        this.make_stmt_marker(stmt);
         this.instruction(new bytecode.StartScope(stmt.span)); // TODO: better span?
         for (let sub_stmt of stmt.stmts) {
             sub_stmt.accept(this);
@@ -69,12 +76,14 @@ class Compiler {
         this.instruction(new bytecode.EndScope(stmt.span)); // TODO: better span?
     }
     visitFunctionStmt(stmt) {
+        this.make_stmt_marker(stmt);
         let register_context = new RegisterContext();
         let fn_compiler = new Compiler(register_context);
         fn_compiler.compile_stmt(stmt.body);
         this.instruction(new bytecode.DefineFun(stmt.span, stmt.name, stmt.params, fn_compiler.instructions));
     }
     visitForStmt(stmt) {
+        this.make_stmt_marker(stmt);
         this.instruction(new bytecode.StartScope(stmt.span)); // TODO: better span?
         if (stmt.initializer) {
             this.compile_stmt(stmt.initializer);
@@ -96,6 +105,7 @@ class Compiler {
         this.instruction(new bytecode.EndScope(stmt.span)); // TODO: better span?
     }
     visitIfStmt(stmt) {
+        this.make_stmt_marker(stmt);
         let cond = this.compile_expr(stmt.condition);
         let true_compiler = new Compiler(this.register_context);
         true_compiler.compile_stmt(stmt.then_branch);
@@ -110,6 +120,7 @@ class Compiler {
         this.instruction(new bytecode.If(stmt.span, cond, true_compiler.instructions, false_compiler ? false_compiler.instructions : null));
     }
     visitReturnStmt(stmt) {
+        this.make_stmt_marker(stmt);
         let e;
         if (stmt.value) {
             e = this.compile_expr(stmt.value);
@@ -120,6 +131,7 @@ class Compiler {
         this.instruction(new bytecode.Return(stmt.span, e));
     }
     visitWhileStmt(stmt) {
+        this.make_stmt_marker(stmt);
         let check_compiler = new Compiler(this.register_context);
         let check = check_compiler.compile_expr(stmt.condition);
         let body_compiler = new Compiler(this.register_context);
@@ -162,6 +174,7 @@ class Compiler {
         return v;
     }
     visitCallExpr(expr) {
+        console.log(expr);
         let callee = this.compile_expr(expr.callee);
         let args = [];
         for (let a_ast of expr.args) {
