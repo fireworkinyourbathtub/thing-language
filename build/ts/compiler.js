@@ -69,11 +69,11 @@ class Compiler {
     }
     visitBlockStmt(stmt) {
         this.make_stmt_marker(stmt);
-        this.instruction(new bytecode.StartScope(stmt.span)); // TODO: better span?
+        this.instruction(new bytecode.StartScope(stmt.obrace_sp));
         for (let sub_stmt of stmt.stmts) {
             sub_stmt.accept(this);
         }
-        this.instruction(new bytecode.EndScope(stmt.span)); // TODO: better span?
+        this.instruction(new bytecode.EndScope(stmt.cbrace_sp));
     }
     visitFunctionStmt(stmt) {
         this.make_stmt_marker(stmt);
@@ -84,7 +84,7 @@ class Compiler {
     }
     visitForStmt(stmt) {
         this.make_stmt_marker(stmt);
-        this.instruction(new bytecode.StartScope(stmt.span)); // TODO: better span?
+        this.instruction(new bytecode.StartScope(stmt.for_sp));
         if (stmt.initializer) {
             this.compile_stmt(stmt.initializer);
         }
@@ -102,7 +102,7 @@ class Compiler {
             body_compiler.compile_expr(stmt.increment);
         }
         this.instruction(new bytecode.While(stmt.span, check_compiler.instructions, check, body_compiler.instructions));
-        this.instruction(new bytecode.EndScope(stmt.span)); // TODO: better span?
+        this.instruction(new bytecode.EndScope(stmt.for_sp)); // TODO: better span?
     }
     visitIfStmt(stmt) {
         this.make_stmt_marker(stmt);

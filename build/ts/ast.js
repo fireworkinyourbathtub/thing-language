@@ -140,9 +140,11 @@ class VarStmt {
 }
 exports.VarStmt = VarStmt;
 class BlockStmt {
-    constructor(span, stmts) {
+    constructor(span, stmts, obrace_sp, cbrace_sp) {
         this.span = span;
         this.stmts = stmts;
+        this.obrace_sp = obrace_sp;
+        this.cbrace_sp = cbrace_sp;
     }
     accept(visitor) { return visitor.visitBlockStmt(this); }
 }
@@ -162,12 +164,13 @@ class FunctionStmt {
 }
 exports.FunctionStmt = FunctionStmt;
 class ForStmt {
-    constructor(span, initializer, compare, increment, body) {
+    constructor(span, initializer, compare, increment, body, for_sp) {
         this.span = span;
         this.initializer = initializer;
         this.compare = compare;
         this.increment = increment;
         this.body = body;
+        this.for_sp = for_sp;
     }
     accept(visitor) { return visitor.visitForStmt(this); }
 }

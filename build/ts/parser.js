@@ -136,13 +136,13 @@ let declaration;
 let declaration_indirect = () => declaration;
 let for_stmt = new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Token("'for'"), new peg.Token("'('")), new peg.Choice(new peg.Choice(new peg.Indirect(() => var_decl), expr_stmt), new peg.Token("';'").apply(() => null))), new peg.Chain(new peg.Optional(new peg.Indirect(expression_indirect)), new peg.Token("';'"))), new peg.Optional(new peg.Indirect(expression_indirect))), new peg.Token("')'")), new peg.Indirect(statement_indirect))
     .apply(([[[[[[for_, oparen], initializer], cond], inc], cparen], body]) => {
-    return new ast.ForStmt(diagnostics.join_spans(for_.span, body.span), initializer, cond[0], inc, body);
+    return new ast.ForStmt(diagnostics.join_spans(for_.span, body.span), initializer, cond[0], inc, body, for_.span);
 });
 let if_stmt = new peg.Apply(([[[[[if_, oparen], cond], cparen], body], m_else]) => new ast.IfStmt(diagnostics.join_spans(if_.span, m_else ? m_else[1].span : body.span), cond, body, m_else ? m_else[1] : null), new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Token("'if'"), new peg.Token("'('")), new peg.Indirect(expression_indirect)), new peg.Token("')'")), new peg.Indirect(statement_indirect)), new peg.Optional(new peg.Chain(new peg.Token("'else'"), new peg.Indirect(statement_indirect)))));
 let return_stmt = new peg.Apply(([[return_, m_expr], semi]) => new ast.ReturnStmt(diagnostics.join_spans(return_.span, semi.span), m_expr), new peg.Chain(new peg.Chain(new peg.Token("'return'"), new peg.Optional(new peg.Indirect(expression_indirect))), new peg.Token("';'")));
 let while_stmt = new peg.Apply(([[[[while_, oparen], cond], cparen], body]) => new ast.WhileStmt(diagnostics.join_spans(while_.span, body.span), cond, body), new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Token("'while'"), new peg.Token("'('")), new peg.Indirect(expression_indirect)), new peg.Token("')'")), new peg.Indirect(statement_indirect)));
 block =
-    new peg.Apply(([[obrace, decls], cbrace]) => new ast.BlockStmt(diagnostics.join_spans(obrace.span, cbrace.span), decls), new peg.Chain(new peg.Chain(new peg.Token("'{'"), new peg.ZeroMore(new peg.Indirect(declaration_indirect))), new peg.Token("'}'")));
+    new peg.Apply(([[obrace, decls], cbrace]) => new ast.BlockStmt(diagnostics.join_spans(obrace.span, cbrace.span), decls, obrace.span, cbrace.span), new peg.Chain(new peg.Chain(new peg.Token("'{'"), new peg.ZeroMore(new peg.Indirect(declaration_indirect))), new peg.Token("'}'")));
 statement =
     expr_stmt
         .choice(print_stmt)

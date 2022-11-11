@@ -129,7 +129,7 @@ export class VarStmt implements Stmt {
     accept<T>(visitor: StmtVisitor<T>) { return visitor.visitVarStmt(this); }
 }
 export class BlockStmt implements Stmt {
-    constructor(public span: diagnostics.Span, public stmts: Stmt[]) {}
+    constructor(public span: diagnostics.Span, public stmts: Stmt[], public readonly obrace_sp: diagnostics.Span, public readonly cbrace_sp: diagnostics.Span) {}
     accept<T>(visitor: StmtVisitor<T>) { return visitor.visitBlockStmt(this); }
 }
 // export class ClassStmt implements Stmt {
@@ -141,7 +141,7 @@ export class FunctionStmt implements Stmt {
     accept<T>(visitor: StmtVisitor<T>) { return visitor.visitFunctionStmt(this); }
 }
 export class ForStmt implements Stmt {
-    constructor(public span: diagnostics.Span, public initializer: Stmt | null, public compare: Expr | null, public increment: Expr | null, public body: Stmt) {}
+    constructor(public span: diagnostics.Span, public initializer: Stmt | null, public compare: Expr | null, public increment: Expr | null, public body: Stmt, public readonly for_sp: diagnostics.Span) {}
     accept<T>(visitor: StmtVisitor<T>) { return visitor.visitForStmt(this); }
 }
 export class IfStmt implements Stmt {

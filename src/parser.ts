@@ -168,7 +168,7 @@ let for_stmt: peg.PEG<ast.ForStmt> =
         new peg.Token("')'")),
         new peg.Indirect(statement_indirect))
         .apply(([[[[[[for_, oparen], initializer], cond], inc], cparen], body]) => {
-            return new ast.ForStmt(diagnostics.join_spans(for_.span, body.span), initializer, cond[0], inc, body);
+            return new ast.ForStmt(diagnostics.join_spans(for_.span, body.span), initializer, cond[0], inc, body, for_.span);
         })
 
 let if_stmt =
@@ -202,7 +202,7 @@ let while_stmt =
 
 block =
     new peg.Apply(
-        ([[obrace, decls], cbrace]) => new ast.BlockStmt(diagnostics.join_spans(obrace.span, cbrace.span), decls),
+        ([[obrace, decls], cbrace]) => new ast.BlockStmt(diagnostics.join_spans(obrace.span, cbrace.span), decls, obrace.span, cbrace.span),
         new peg.Chain(new peg.Chain(
             new peg.Token("'{'"),
             new peg.ZeroMore(new peg.Indirect(declaration_indirect))),
