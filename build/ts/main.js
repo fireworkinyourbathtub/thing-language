@@ -26,12 +26,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const diagnostics = __importStar(require("./diagnostics"));
 const lexer = __importStar(require("./lexer"));
 const parser = __importStar(require("./parser"));
+const compiler = __importStar(require("./compiler"));
 let editor = ace.edit("codeeditor");
 editor.setOption("printMarginColumn", false);
 document.getElementById('submitbutton').addEventListener('click', function () {
     let inputcodebox = document.getElementById('inputcodebox');
     let input = editor.getValue();
     diagnostics.clear();
-    let result = parser.parse(lexer.lex(input));
-    console.log(result);
+    let lexed = lexer.lex(input);
+    let parsed = parser.parse(lexed);
+    if (parsed) {
+        let result = compiler.compile(parsed);
+        console.log(result);
+    }
 });

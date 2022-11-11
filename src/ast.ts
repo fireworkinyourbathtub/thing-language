@@ -13,12 +13,12 @@ export interface ExprVisitor<T> {
     visitNilLiteral(ast: NilLiteral): T;
     visitAssignExpr(ast: AssignExpr): T;
     visitCallExpr(ast: CallExpr): T;
-    visitGetExpr(ast: GetExpr): T;
     visitLogicalExpr(ast: LogicalExpr): T;
-    visitSetExpr(ast: SetExpr): T;
-    visitThisExpr(ast: ThisExpr): T;
 
-    // visit(ast: SuperExpr);
+    // visitGetExpr(ast: GetExpr): T;
+    // visitSetExpr(ast: SetExpr): T;
+    // visitThisExpr(ast: ThisExpr): T;
+    // visitSuperExpr(ast: SuperExpr): T;
 }
 
 export interface Expr extends AST {
@@ -77,22 +77,22 @@ export class CallExpr implements Expr {
     constructor(public span: diagnostics.Span, public callee: Expr, public args: Expr[]) {}
     accept<T>(visitor: ExprVisitor<T>) { return visitor.visitCallExpr(this); }
 }
-export class GetExpr implements Expr {
-    constructor(public span: diagnostics.Span, public object: Expr, public name: string) {}
-    accept<T>(visitor: ExprVisitor<T>) { return visitor.visitGetExpr(this); }
-}
+// export class GetExpr implements Expr {
+    // constructor(public span: diagnostics.Span, public object: Expr, public name: string) {}
+    // accept<T>(visitor: ExprVisitor<T>) { return visitor.visitGetExpr(this); }
+// }
 export class LogicalExpr implements Expr {
     constructor(public span: diagnostics.Span, public left: Expr, public operator: LogicalOperator, public right: Expr) {}
     accept<T>(visitor: ExprVisitor<T>) { return visitor.visitLogicalExpr(this); }
 }
-export class SetExpr implements Expr {
-    constructor(public span: diagnostics.Span, public object: Expr, public name: string, public value: Expr) {}
-    accept<T>(visitor: ExprVisitor<T>) { return visitor.visitSetExpr(this); }
-}
-export class ThisExpr implements Expr {
-    constructor(public span: diagnostics.Span, public keyword: lexer.This) {}
-    accept<T>(visitor: ExprVisitor<T>) { return visitor.visitThisExpr(this); }
-}
+// export class SetExpr implements Expr {
+    // constructor(public span: diagnostics.Span, public object: Expr, public name: string, public value: Expr) {}
+    // accept<T>(visitor: ExprVisitor<T>) { return visitor.visitSetExpr(this); }
+// }
+// export class ThisExpr implements Expr {
+    // constructor(public span: diagnostics.Span, public keyword: lexer.This) {}
+    // accept<T>(visitor: ExprVisitor<T>) { return visitor.visitThisExpr(this); }
+// }
 
 // export class SuperExpr implements Expr {
 // constructor(public span: diagnostics.Span, keyword: Token, method: ) {}

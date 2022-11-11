@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WhileStmt = exports.ReturnStmt = exports.IfStmt = exports.ForStmt = exports.FunctionStmt = exports.BlockStmt = exports.VarStmt = exports.PrintStmt = exports.ExprStmt = exports.ThisExpr = exports.SetExpr = exports.LogicalExpr = exports.GetExpr = exports.CallExpr = exports.AssignExpr = exports.NilLiteral = exports.BoolLiteral = exports.NumberLiteral = exports.StringLiteral = exports.VarExpr = exports.UnaryExpr = exports.BinaryExpr = exports.LogicalOperator = exports.UnaryOperator = exports.BinaryOperator = void 0;
+exports.WhileStmt = exports.ReturnStmt = exports.IfStmt = exports.ForStmt = exports.FunctionStmt = exports.BlockStmt = exports.VarStmt = exports.PrintStmt = exports.ExprStmt = exports.LogicalExpr = exports.CallExpr = exports.AssignExpr = exports.NilLiteral = exports.BoolLiteral = exports.NumberLiteral = exports.StringLiteral = exports.VarExpr = exports.UnaryExpr = exports.BinaryExpr = exports.LogicalOperator = exports.UnaryOperator = exports.BinaryOperator = void 0;
 var BinaryOperator;
 (function (BinaryOperator) {
     BinaryOperator[BinaryOperator["Plus"] = 0] = "Plus";
@@ -101,15 +101,10 @@ class CallExpr {
     accept(visitor) { return visitor.visitCallExpr(this); }
 }
 exports.CallExpr = CallExpr;
-class GetExpr {
-    constructor(span, object, name) {
-        this.span = span;
-        this.object = object;
-        this.name = name;
-    }
-    accept(visitor) { return visitor.visitGetExpr(this); }
-}
-exports.GetExpr = GetExpr;
+// export class GetExpr implements Expr {
+// constructor(public span: diagnostics.Span, public object: Expr, public name: string) {}
+// accept<T>(visitor: ExprVisitor<T>) { return visitor.visitGetExpr(this); }
+// }
 class LogicalExpr {
     constructor(span, left, operator, right) {
         this.span = span;
@@ -120,24 +115,6 @@ class LogicalExpr {
     accept(visitor) { return visitor.visitLogicalExpr(this); }
 }
 exports.LogicalExpr = LogicalExpr;
-class SetExpr {
-    constructor(span, object, name, value) {
-        this.span = span;
-        this.object = object;
-        this.name = name;
-        this.value = value;
-    }
-    accept(visitor) { return visitor.visitSetExpr(this); }
-}
-exports.SetExpr = SetExpr;
-class ThisExpr {
-    constructor(span, keyword) {
-        this.span = span;
-        this.keyword = keyword;
-    }
-    accept(visitor) { return visitor.visitThisExpr(this); }
-}
-exports.ThisExpr = ThisExpr;
 class ExprStmt {
     constructor(span, expr) {
         this.span = span;

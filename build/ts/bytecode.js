@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DefineFun = exports.MakeVar = exports.Print = exports.Nil = exports.Register = void 0;
+exports.ReadVar = exports.EndScope = exports.StartScope = exports.Return = exports.If = exports.While = exports.DefineFun = exports.MakeVar = exports.Print = exports.Constant = exports.Nil = exports.Register = void 0;
 class Register {
     constructor(index) {
         this.index = index;
@@ -11,6 +11,12 @@ class Nil {
     constructor() { }
 }
 exports.Nil = Nil;
+class Constant {
+    constructor(x) {
+        this.x = x;
+    }
+}
+exports.Constant = Constant;
 class Print {
     constructor(span, expr) {
         this.span = span;
@@ -44,3 +50,66 @@ class DefineFun {
     }
 }
 exports.DefineFun = DefineFun;
+class While {
+    constructor(span, check_code, check, body_code) {
+        this.span = span;
+        this.check_code = check_code;
+        this.check = check;
+        this.body_code = body_code;
+    }
+    pretty_print() {
+        return `while ${this.check} { /* TODO */ };`;
+    }
+}
+exports.While = While;
+class If {
+    constructor(span, cond, true_branch, false_branch) {
+        this.span = span;
+        this.cond = cond;
+        this.true_branch = true_branch;
+        this.false_branch = false_branch;
+    }
+    pretty_print() {
+        return `if ${this.cond} { /* TODO */ };`;
+    }
+}
+exports.If = If;
+class Return {
+    constructor(span, v) {
+        this.span = span;
+        this.v = v;
+    }
+    pretty_print() {
+        return `return ${this.v};`;
+    }
+}
+exports.Return = Return;
+class StartScope {
+    constructor(span) {
+        this.span = span;
+    }
+    pretty_print() {
+        return `start_scope;`;
+    }
+}
+exports.StartScope = StartScope;
+class EndScope {
+    constructor(span) {
+        this.span = span;
+    }
+    pretty_print() {
+        return `end_scope;`;
+    }
+}
+exports.EndScope = EndScope;
+class ReadVar {
+    constructor(span, v, dest) {
+        this.span = span;
+        this.v = v;
+        this.dest = dest;
+    }
+    pretty_print() {
+        return `read_var ${this.v} -> ${this.dest};`;
+    }
+}
+exports.ReadVar = ReadVar;

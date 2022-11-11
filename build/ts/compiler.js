@@ -25,21 +25,36 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.compile = void 0;
 const bytecode = __importStar(require("./bytecode"));
-class StmtCompiler {
-    constructor(instructions) {
-        this.instructions = instructions;
+class RegisterContext {
+    constructor() {
+        this.register_i = 0;
+    }
+    new_register() {
+        return new bytecode.Register(this.register_i++);
+    }
+}
+class Compiler {
+    constructor(register_context) {
+        this.register_context = register_context;
+        this.instructions = [];
+    }
+    compile_stmt(stmt) {
+        stmt.accept(this);
+    }
+    compile_expr(expr) {
+        return expr.accept(this);
     }
     visitExprStmt(stmt) {
-        compile_expr(this.instructions, stmt.expr);
+        this.compile_expr(stmt.expr);
     }
     visitPrintStmt(stmt) {
-        let e = compile_expr(this.instructions, stmt.expr);
+        let e = this.compile_expr(stmt.expr);
         this.instruction(new bytecode.Print(stmt.span, e));
     }
     visitVarStmt(stmt) {
         let e;
         if (stmt.initializer) {
-            e = compile_expr(this.instructions, stmt.initializer);
+            e = this.compile_expr(stmt.initializer);
         }
         else {
             e = new bytecode.Nil();
@@ -47,34 +62,69 @@ class StmtCompiler {
         this.instruction(new bytecode.MakeVar(stmt.span, stmt.name, e));
     }
     visitBlockStmt(stmt) {
+        this.instruction(new bytecode.StartScope(stmt.span)); // TODO: better span?
         for (let sub_stmt of stmt.stmts) {
             sub_stmt.accept(this);
         }
+        this.instruction(new bytecode.EndScope(stmt.span)); // TODO: better span?
     }
     visitFunctionStmt(stmt) {
-        let fn_instructions = [];
-        compile_stmt(fn_instructions, stmt.body);
-        this.instruction(new bytecode.DefineFun(stmt.span, stmt.name, stmt.params, fn_instructions));
+        let register_context = new RegisterContext();
+        let fn_compiler = new Compiler(register_context);
+        fn_compiler.compile_stmt(stmt.body);
+        this.instruction(new bytecode.DefineFun(stmt.span, stmt.name, stmt.params, fn_compiler.instructions));
     }
     visitForStmt(stmt) {
-        throw new Error("not implemented yet"); // TODO
+        this.instruction(new bytecode.StartScope(stmt.span)); // TODO: better span?
+        if (stmt.initializer) {
+            this.compile_stmt(stmt.initializer);
+        }
+        let check_compiler = new Compiler(this.register_context);
+        let check;
+        if (stmt.compare) {
+            check = check_compiler.compile_expr(stmt.compare);
+        }
+        else {
+            check = new bytecode.Constant(true);
+        }
+        let body_compiler = new Compiler(this.register_context);
+        body_compiler.compile_stmt(stmt.body);
+        if (stmt.increment) {
+            body_compiler.compile_expr(stmt.increment);
+        }
+        this.instruction(new bytecode.While(stmt.span, check_compiler.instructions, check, body_compiler.instructions));
+        this.instruction(new bytecode.EndScope(stmt.span)); // TODO: better span?
     }
     visitIfStmt(stmt) {
-        throw new Error("not implemented yet"); // TODO
+        let cond = this.compile_expr(stmt.condition);
+        let true_compiler = new Compiler(this.register_context);
+        true_compiler.compile_stmt(stmt.then_branch);
+        let false_compiler;
+        if (stmt.else_branch) {
+            false_compiler = new Compiler(this.register_context);
+            false_compiler.compile_stmt(stmt.else_branch);
+        }
+        else {
+            false_compiler = null;
+        }
+        this.instruction(new bytecode.If(stmt.span, cond, true_compiler.instructions, false_compiler ? false_compiler.instructions : null));
     }
     visitReturnStmt(stmt) {
-        throw new Error("not implemented yet"); // TODO
+        let e;
+        if (stmt.value) {
+            e = this.compile_expr(stmt.value);
+        }
+        else {
+            e = new bytecode.Nil();
+        }
+        this.instruction(new bytecode.Return(stmt.span, e));
     }
     visitWhileStmt(stmt) {
-        throw new Error("not implemented yet"); // TODO
-    }
-    instruction(instr) {
-        this.instructions.push(instr);
-    }
-}
-class ExprCompiler {
-    constructor(instructions) {
-        this.instructions = instructions;
+        let check_compiler = new Compiler(this.register_context);
+        let check = check_compiler.compile_expr(stmt.condition);
+        let body_compiler = new Compiler(this.register_context);
+        body_compiler.compile_stmt(stmt.body);
+        this.instruction(new bytecode.While(stmt.span, check_compiler.instructions, check, body_compiler.instructions));
     }
     visitBinaryExpr(expr) {
         throw new Error("not implemented yet"); // TODO
@@ -83,19 +133,21 @@ class ExprCompiler {
         throw new Error("not implemented yet"); // TODO
     }
     visitVarExpr(expr) {
-        throw new Error("not implemented yet"); // TODO
+        let reg = this.register_context.new_register();
+        this.instruction(new bytecode.ReadVar(expr.span, expr.name, reg));
+        return reg;
     }
     visitStringLiteral(expr) {
-        throw new Error("not implemented yet"); // TODO
+        return new bytecode.Constant(expr.value);
     }
     visitNumberLiteral(expr) {
-        throw new Error("not implemented yet"); // TODO
+        return new bytecode.Constant(expr.value);
     }
     visitBoolLiteral(expr) {
-        throw new Error("not implemented yet"); // TODO
+        return new bytecode.Constant(expr.value);
     }
     visitNilLiteral(expr) {
-        throw new Error("not implemented yet"); // TODO
+        return new bytecode.Nil();
     }
     visitAssignExpr(expr) {
         throw new Error("not implemented yet"); // TODO
@@ -103,16 +155,7 @@ class ExprCompiler {
     visitCallExpr(expr) {
         throw new Error("not implemented yet"); // TODO
     }
-    visitGetExpr(expr) {
-        throw new Error("not implemented yet"); // TODO
-    }
     visitLogicalExpr(expr) {
-        throw new Error("not implemented yet"); // TODO
-    }
-    visitSetExpr(expr) {
-        throw new Error("not implemented yet"); // TODO
-    }
-    visitThisExpr(expr) {
         throw new Error("not implemented yet"); // TODO
     }
     instruction(instr) {
@@ -120,16 +163,11 @@ class ExprCompiler {
     }
 }
 function compile(stmts) {
-    let instructions = [];
+    let register_context = new RegisterContext();
+    let compiler = new Compiler(register_context);
     for (let stmt of stmts) {
-        compile_stmt(instructions, stmt);
+        compiler.compile_stmt(stmt);
     }
-    return instructions;
+    return compiler.instructions;
 }
 exports.compile = compile;
-function compile_stmt(instructions, stmt) {
-    stmt.accept(new StmtCompiler(instructions));
-}
-function compile_expr(instructions, expr) {
-    return expr.accept(new ExprCompiler(instructions));
-}
