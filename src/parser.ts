@@ -54,7 +54,7 @@ let primary: peg.PEG<ast.Expr> =
 let call: peg.PEG<ast.Expr> =
     primary.chain(
         new peg.ZeroMore(new peg.Choice(
-            new peg.Token("'('").chain(new peg.Optional(args)).chain(new peg.Token("')'")).apply(([[oparen, args], cparen]) => args),
+            new peg.Token("'('").chain(new peg.Optional(args)).chain(new peg.Token("')'")).apply(([[oparen, args], cparen]) => { let x: [ast.Expr[] | null, lexer.Token & diagnostics.Located] = [args, cparen]; return x }),
             new peg.Token("'.'").chain(new peg.Token<lexer.Identifier>("identifier")).apply(([dot, ident]) => ident)
         ))
     ).apply(([expr, ops]) => {
@@ -65,11 +65,10 @@ let call: peg.PEG<ast.Expr> =
                 // expr =
                 throw new Error("not implemented yet"); // TODO
             } else {
-                console.log(cur_op);
                 let a: ast.Expr[];
-                if (cur_op) { a = cur_op; }
+                if (cur_op[0]) { a = cur_op[0] as ast.Expr[]; }
                 else { a = []; }
-                expr = new ast.CallExpr(expr.span, expr, a); // TODO: better span
+                expr = new ast.CallExpr(diagnostics.join_spans(expr.span, cur_op[1].span), expr, a);
             }
         }
         return expr;
@@ -147,7 +146,7 @@ let logic_or = logic_and.chain(new peg.ZeroMore(new peg.Token("'or'").chain(logi
 let assignment: peg.PEG<ast.Expr>;
 assignment =
     new peg.Optional(call.chain(new peg.Token("'.'"))).chain(new peg.Token<lexer.Identifier>("identifier")).chain(new peg.Token("'='")).chain(new peg.Indirect(() => assignment))
-        .apply(([[[m_call, ident], eq], assignment]) => new ast.AssignExpr(diagnostics.join_spans(ident.span, assignment.span), ident.name, assignment))
+        .apply(([[[m_call, ident], eq], assignment]) => new ast.AssignExpr(diagnostics.join_spans(m_call ? m_call[0].span : ident.span, assignment.span), ident.name, assignment))
     .choice(logic_or);
 
 expression = assignment;

@@ -73,7 +73,11 @@ class DefineFun {
         this.instructions = instructions;
     }
     pretty_print(ppc) {
-        ppc.append(`define_function ${this.name} (${this.params}) { /* TODO */ };`, this.span); // TODO: pretty print params
+        ppc.append(`define_function ${this.name}(${this.params}) {`, this.span); // TODO: pretty print params
+        ppc.indent();
+        ppc.pretty_print_instrs(this.instructions);
+        ppc.dedent();
+        ppc.append_no_span(`}`);
     }
 }
 exports.DefineFun = DefineFun;
@@ -107,7 +111,20 @@ class If {
         this.false_branch = false_branch;
     }
     pretty_print(ppc) {
-        ppc.append(`if ${this.cond.pretty_print()} { /* TODO */ };`, this.span); // TODO
+        ppc.append('if ${this.cond.pretty_print()} {', this.span);
+        ppc.indent();
+        ppc.pretty_print_instrs(this.true_branch);
+        ppc.dedent();
+        if (this.false_branch) {
+            ppc.append_no_span('} else {');
+            ppc.indent();
+            ppc.pretty_print_instrs(this.false_branch);
+            ppc.dedent();
+            ppc.append_no_span('}');
+        }
+        else {
+            ppc.append_no_span('}');
+        }
     }
 }
 exports.If = If;

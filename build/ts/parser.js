@@ -84,7 +84,7 @@ let params = new peg.Token("identifier").chain(new peg.ZeroMore(new peg.Token("'
 let fn = new peg.Token("identifier").chain(new peg.Token("'('")).chain(new peg.Optional(params)).chain(new peg.Token("')'")).chain(new peg.Indirect(() => block))
     .apply(([[[[identifier, oparen], params], cparen], block]) => [identifier, params ? params : [], block]);
 let primary = new peg.Token('bool literal').apply(tok => new ast.BoolLiteral(tok.span, tok.bool)).choice(new peg.Token("'nil'").apply(tok => new ast.NilLiteral(tok.span))).choice(new peg.Token('number literal').apply(tok => new ast.NumberLiteral(tok.span, tok.num))).choice(new peg.Token('string literal').apply(tok => new ast.StringLiteral(tok.span, tok.str))).choice(new peg.Token("identifier").apply(ident => new ast.VarExpr(ident.span, ident.name))).choice(new peg.Token("'('").chain(new peg.Indirect(expression_indirect)).chain(new peg.Token("')'")).apply(([[oparen, expr], cparen]) => expr));
-let call = primary.chain(new peg.ZeroMore(new peg.Choice(new peg.Token("'('").chain(new peg.Optional(args)).chain(new peg.Token("')'")).apply(([[oparen, args], cparen]) => args), new peg.Token("'.'").chain(new peg.Token("identifier")).apply(([dot, ident]) => ident)))).apply(([expr, ops]) => {
+let call = primary.chain(new peg.ZeroMore(new peg.Choice(new peg.Token("'('").chain(new peg.Optional(args)).chain(new peg.Token("')'")).apply(([[oparen, args], cparen]) => { let x = [args, cparen]; return x; }), new peg.Token("'.'").chain(new peg.Token("identifier")).apply(([dot, ident]) => ident)))).apply(([expr, ops]) => {
     let cur_op;
     while (cur_op = ops.shift()) {
         if (cur_op instanceof lexer.Identifier) {
@@ -93,15 +93,14 @@ let call = primary.chain(new peg.ZeroMore(new peg.Choice(new peg.Token("'('").ch
             throw new Error("not implemented yet"); // TODO
         }
         else {
-            console.log(cur_op);
             let a;
-            if (cur_op) {
-                a = cur_op;
+            if (cur_op[0]) {
+                a = cur_op[0];
             }
             else {
                 a = [];
             }
-            expr = new ast.CallExpr(expr.span, expr, a); // TODO: better span
+            expr = new ast.CallExpr(diagnostics.join_spans(expr.span, cur_op[1].span), expr, a);
         }
     }
     return expr;
@@ -131,7 +130,7 @@ let logic_or = logic_and.chain(new peg.ZeroMore(new peg.Token("'or'").chain(logi
 let assignment;
 assignment =
     new peg.Optional(call.chain(new peg.Token("'.'"))).chain(new peg.Token("identifier")).chain(new peg.Token("'='")).chain(new peg.Indirect(() => assignment))
-        .apply(([[[m_call, ident], eq], assignment]) => new ast.AssignExpr(diagnostics.join_spans(ident.span, assignment.span), ident.name, assignment))
+        .apply(([[[m_call, ident], eq], assignment]) => new ast.AssignExpr(diagnostics.join_spans(m_call ? m_call[0].span : ident.span, assignment.span), ident.name, assignment))
         .choice(logic_or);
 expression = assignment;
 let expr_stmt = new peg.Apply(([expr, semi]) => new ast.ExprStmt(diagnostics.join_spans(expr.span, semi.span), expr), new peg.Chain(new peg.Indirect(expression_indirect), new peg.Token("';'")));

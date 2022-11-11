@@ -41,7 +41,11 @@ export class MakeVar implements Instruction {
 export class DefineFun implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly name: string, public readonly params: string[], public readonly instructions: Instruction[]) {}
     pretty_print(ppc: PrettyPrintContext) {
-        ppc.append(`define_function ${this.name} (${this.params}) { /* TODO */ };`, this.span); // TODO: pretty print params
+        ppc.append(`define_function ${this.name}(${this.params}) {`, this.span) // TODO: pretty print params
+        ppc.indent();
+        ppc.pretty_print_instrs(this.instructions);
+        ppc.dedent();
+        ppc.append_no_span(`}`)
     }
 }
 
@@ -65,7 +69,19 @@ export class While implements Instruction {
 export class If implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly cond: Value, public readonly true_branch: Instruction[], public readonly false_branch: Instruction[] | null) {}
     pretty_print(ppc: PrettyPrintContext) {
-        ppc.append(`if ${this.cond.pretty_print()} { /* TODO */ };`, this.span); // TODO
+        ppc.append('if ${this.cond.pretty_print()} {', this.span);
+        ppc.indent();
+        ppc.pretty_print_instrs(this.true_branch);
+        ppc.dedent();
+        if (this.false_branch) {
+            ppc.append_no_span('} else {');
+            ppc.indent();
+            ppc.pretty_print_instrs(this.false_branch);
+            ppc.dedent();
+            ppc.append_no_span('}');
+        } else {
+            ppc.append_no_span('}');
+        }
     }
 }
 
@@ -114,7 +130,7 @@ export class Call implements Instruction {
 export class BinaryOp implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly l: Value, public readonly r: Value, public readonly op: ast.BinaryOperator, public readonly dest: Register) {}
     pretty_print(ppc: PrettyPrintContext) {
-        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span);
+        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span); // TODO
         throw new Error("not implemented yet");
     }
 }
@@ -122,7 +138,7 @@ export class BinaryOp implements Instruction {
 export class UnaryOp implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly v: Value, public readonly op: ast.UnaryOperator, public readonly dest: Register) {}
     pretty_print(ppc: PrettyPrintContext) {
-        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span);
+        // ppc.append(`call ${this.callee}(${this.args}) -> ${this.dest};`, this.span); // TODO
         throw new Error("not implemented yet");
     }
 }
