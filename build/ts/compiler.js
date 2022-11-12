@@ -25,12 +25,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.compile = void 0;
 const bytecode = __importStar(require("./bytecode"));
+const runtime = __importStar(require("./runtime"));
 class RegisterContext {
     constructor() {
         this.register_i = 0;
     }
     new_register() {
-        return new bytecode.Register(this.register_i++);
+        return new runtime.Register(this.register_i++);
     }
 }
 class Compiler {
@@ -63,7 +64,7 @@ class Compiler {
             e = this.compile_expr(stmt.initializer);
         }
         else {
-            e = new bytecode.Nil();
+            e = new runtime.Nil();
         }
         this.instruction(new bytecode.MakeVar(stmt.span, stmt.name, e));
     }
@@ -80,7 +81,7 @@ class Compiler {
         let register_context = new RegisterContext();
         let fn_compiler = new Compiler(register_context);
         fn_compiler.compile_stmt(stmt.body);
-        let fn = new bytecode.Function(stmt.name, stmt.params, fn_compiler.instructions);
+        let fn = new runtime.Function(stmt.name, stmt.params, fn_compiler.instructions);
         this.instruction(new bytecode.MakeVar(stmt.span, stmt.name, fn));
     }
     visitForStmt(stmt) {
@@ -95,7 +96,7 @@ class Compiler {
             check = check_compiler.compile_expr(stmt.compare);
         }
         else {
-            check = new bytecode.Constant(true);
+            check = new runtime.Bool(true);
         }
         let body_compiler = new Compiler(this.register_context);
         body_compiler.compile_stmt(stmt.body);
@@ -127,7 +128,7 @@ class Compiler {
             e = this.compile_expr(stmt.value);
         }
         else {
-            e = new bytecode.Nil();
+            e = new runtime.Nil();
         }
         this.instruction(new bytecode.Return(stmt.span, e));
     }
@@ -158,16 +159,16 @@ class Compiler {
         return reg;
     }
     visitStringLiteral(expr) {
-        return new bytecode.Constant(expr.value);
+        return new runtime.String(expr.value);
     }
     visitNumberLiteral(expr) {
-        return new bytecode.Constant(expr.value);
+        return new runtime.Number(expr.value);
     }
     visitBoolLiteral(expr) {
-        return new bytecode.Constant(expr.value);
+        return new runtime.Bool(expr.value);
     }
     visitNilLiteral(expr) {
-        return new bytecode.Nil();
+        return new runtime.Nil();
     }
     visitAssignExpr(expr) {
         let v = this.compile_expr(expr.value);
@@ -175,7 +176,6 @@ class Compiler {
         return v;
     }
     visitCallExpr(expr) {
-        console.log(expr);
         let callee = this.compile_expr(expr.callee);
         let args = [];
         for (let a_ast of expr.args) {

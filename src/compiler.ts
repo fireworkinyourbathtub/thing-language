@@ -1,5 +1,6 @@
 import * as ast from './ast';
 import * as bytecode from './bytecode';
+import * as runtime from './runtime';
 import * as diagnostics from './diagnostics';
 
 class RegisterContext {
@@ -9,12 +10,12 @@ class RegisterContext {
         this.register_i = 0;
     }
 
-    new_register(): bytecode.Register {
-        return new bytecode.Register(this.register_i++);
+    new_register(): runtime.Register {
+        return new runtime.Register(this.register_i++);
     }
 }
 
-class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value> {
+class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<runtime.Value> {
     instructions: bytecode.Instruction[]
 
     constructor(public register_context: RegisterContext) {
@@ -25,7 +26,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
         stmt.accept(this);
     }
 
-    compile_expr(expr: ast.Expr): bytecode.Value {
+    compile_expr(expr: ast.Expr): runtime.Value {
         return expr.accept(this);
     }
 
@@ -50,7 +51,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
         if (stmt.initializer) {
             e = this.compile_expr(stmt.initializer);
         } else {
-            e = new bytecode.Nil();
+            e = new runtime.Nil();
         }
 
         this.instruction(new bytecode.MakeVar(stmt.span, stmt.name, e));
@@ -71,7 +72,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
         let fn_compiler = new Compiler(register_context);
         fn_compiler.compile_stmt(stmt.body);
 
-        let fn = new bytecode.Function(stmt.name, stmt.params, fn_compiler.instructions);
+        let fn = new runtime.Function(stmt.name, stmt.params, fn_compiler.instructions);
         this.instruction(new bytecode.MakeVar(stmt.span, stmt.name, fn));
     }
 
@@ -87,7 +88,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
         if (stmt.compare) {
             check = check_compiler.compile_expr(stmt.compare);
         } else {
-            check = new bytecode.Constant(true);
+            check = new runtime.Bool(true);
         }
 
         let body_compiler = new Compiler(this.register_context);
@@ -125,7 +126,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
         if (stmt.value) {
             e = this.compile_expr(stmt.value);
         } else {
-            e = new bytecode.Nil();
+            e = new runtime.Nil();
         }
 
         this.instruction(new bytecode.Return(stmt.span, e));
@@ -142,7 +143,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
         this.instruction(new bytecode.While(stmt.span, check_compiler.instructions, check, body_compiler.instructions));
     }
 
-    visitBinaryExpr(expr: ast.BinaryExpr): bytecode.Value {
+    visitBinaryExpr(expr: ast.BinaryExpr): runtime.Value {
         let l = this.compile_expr(expr.left);
         let r = this.compile_expr(expr.right);
 
@@ -152,43 +153,42 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
         return reg;
     }
 
-    visitUnaryExpr(expr: ast.UnaryExpr): bytecode.Value {
+    visitUnaryExpr(expr: ast.UnaryExpr): runtime.Value {
         let v = this.compile_expr(expr.operand);
         let reg = this.register_context.new_register();
         this.instruction(new bytecode.UnaryOp(expr.span, v, expr.operator, reg));
         return reg;
     }
 
-    visitVarExpr(expr: ast.VarExpr): bytecode.Value {
+    visitVarExpr(expr: ast.VarExpr): runtime.Value {
         let reg = this.register_context.new_register();
         this.instruction(new bytecode.ReadVar(expr.span, expr.name, reg));
         return reg;
     }
 
-    visitStringLiteral(expr: ast.StringLiteral): bytecode.Value {
-        return new bytecode.Constant(expr.value);
+    visitStringLiteral(expr: ast.StringLiteral): runtime.Value {
+        return new runtime.String(expr.value);
     }
 
-    visitNumberLiteral(expr: ast.NumberLiteral): bytecode.Value {
-        return new bytecode.Constant(expr.value);
+    visitNumberLiteral(expr: ast.NumberLiteral): runtime.Value {
+        return new runtime.Number(expr.value);
     }
 
-    visitBoolLiteral(expr: ast.BoolLiteral): bytecode.Value {
-        return new bytecode.Constant(expr.value);
+    visitBoolLiteral(expr: ast.BoolLiteral): runtime.Value {
+        return new runtime.Bool(expr.value);
     }
 
-    visitNilLiteral(expr: ast.NilLiteral): bytecode.Value {
-        return new bytecode.Nil();
+    visitNilLiteral(expr: ast.NilLiteral): runtime.Value {
+        return new runtime.Nil();
     }
 
-    visitAssignExpr(expr: ast.AssignExpr): bytecode.Value {
+    visitAssignExpr(expr: ast.AssignExpr): runtime.Value {
         let v = this.compile_expr(expr.value);
         this.instruction(new bytecode.Assign(expr.span, expr.name, v));
         return v;
     }
 
-    visitCallExpr(expr: ast.CallExpr): bytecode.Value {
-        console.log(expr);
+    visitCallExpr(expr: ast.CallExpr): runtime.Value {
         let callee = this.compile_expr(expr.callee);
 
         let args = [];
@@ -201,7 +201,7 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
         return reg;
     }
 
-    visitLogicalExpr(expr: ast.LogicalExpr): bytecode.Value {
+    visitLogicalExpr(expr: ast.LogicalExpr): runtime.Value {
         throw new Error("not implemented yet"); // TODO
     }
 

@@ -23,37 +23,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PrettyPrintContext = exports.StmtMarker = exports.UnaryOp = exports.BinaryOp = exports.Call = exports.Assign = exports.ReadVar = exports.EndScope = exports.StartScope = exports.Return = exports.If = exports.While = exports.MakeVar = exports.Print = exports.Constant = exports.Function = exports.Nil = exports.Register = void 0;
+exports.PrettyPrintContext = exports.StmtMarker = exports.UnaryOp = exports.BinaryOp = exports.Call = exports.Assign = exports.ReadVar = exports.EndScope = exports.StartScope = exports.Return = exports.If = exports.While = exports.MakeVar = exports.Print = void 0;
 const diagnostics = __importStar(require("./diagnostics"));
 const ast = __importStar(require("./ast"));
-class Register {
-    constructor(index) {
-        this.index = index;
-    }
-    pretty_print() { return `%${this.index}`; }
-}
-exports.Register = Register;
-class Nil {
-    constructor() { }
-    pretty_print() { return 'nil'; }
-}
-exports.Nil = Nil;
-class Function {
-    constructor(name, params, instructions) {
-        this.name = name;
-        this.params = params;
-        this.instructions = instructions;
-    }
-    pretty_print() { return `<function '${this.name}'>`; }
-}
-exports.Function = Function;
-class Constant {
-    constructor(x) {
-        this.x = x;
-    }
-    pretty_print() { return this.x; }
-}
-exports.Constant = Constant;
 class Print {
     constructor(span, expr) {
         this.span = span;
@@ -61,6 +33,9 @@ class Print {
     }
     pretty_print(ppc) {
         ppc.append(`print ${this.expr.pretty_print()};`, this.span);
+    }
+    accept(visitor) {
+        return visitor.visitPrint(this);
     }
 }
 exports.Print = Print;
@@ -72,6 +47,9 @@ class MakeVar {
     }
     pretty_print(ppc) {
         ppc.append(`make_var ${this.name} = ${this.value.pretty_print()};`, this.span);
+    }
+    accept(visitor) {
+        return visitor.visitMakeVar(this);
     }
 }
 exports.MakeVar = MakeVar;
@@ -94,6 +72,9 @@ class While {
         ppc.pretty_print_instrs(this.body_code);
         ppc.dedent();
         ppc.append_no_span('}');
+    }
+    accept(visitor) {
+        return visitor.visitWhile(this);
     }
 }
 exports.While = While;
@@ -120,6 +101,9 @@ class If {
             ppc.append_no_span('}');
         }
     }
+    accept(visitor) {
+        return visitor.visitIf(this);
+    }
 }
 exports.If = If;
 class Return {
@@ -130,6 +114,9 @@ class Return {
     pretty_print(ppc) {
         ppc.append(`return ${this.v.pretty_print()};`, this.span);
     }
+    accept(visitor) {
+        return visitor.visitReturn(this);
+    }
 }
 exports.Return = Return;
 class StartScope {
@@ -139,6 +126,9 @@ class StartScope {
     pretty_print(ppc) {
         ppc.append(`start_scope;`, this.span);
     }
+    accept(visitor) {
+        return visitor.visitStartScope(this);
+    }
 }
 exports.StartScope = StartScope;
 class EndScope {
@@ -147,6 +137,9 @@ class EndScope {
     }
     pretty_print(ppc) {
         ppc.append(`end_scope;`, this.span);
+    }
+    accept(visitor) {
+        return visitor.visitEndScope(this);
     }
 }
 exports.EndScope = EndScope;
@@ -159,6 +152,9 @@ class ReadVar {
     pretty_print(ppc) {
         ppc.append(`read_var ${this.v} -> ${this.dest.pretty_print()};`, this.span);
     }
+    accept(visitor) {
+        return visitor.visitReadVar(this);
+    }
 }
 exports.ReadVar = ReadVar;
 class Assign {
@@ -169,6 +165,9 @@ class Assign {
     }
     pretty_print(ppc) {
         ppc.append(`assign ${this.variable} = ${this.value.pretty_print()};`, this.span);
+    }
+    accept(visitor) {
+        return visitor.visitAssign(this);
     }
 }
 exports.Assign = Assign;
@@ -181,6 +180,9 @@ class Call {
     }
     pretty_print(ppc) {
         ppc.append(`call ${this.callee.pretty_print()}(${this.args.map(a => a.pretty_print()).join()}) -> ${this.dest.pretty_print()};`, this.span);
+    }
+    accept(visitor) {
+        return visitor.visitCall(this);
     }
 }
 exports.Call = Call;
@@ -228,6 +230,9 @@ class BinaryOp {
         }
         ppc.append(`${op_name} ${this.l.pretty_print()} ${this.r.pretty_print()} -> ${this.dest.pretty_print()};`, this.span);
     }
+    accept(visitor) {
+        return visitor.visitBinaryOp(this);
+    }
 }
 exports.BinaryOp = BinaryOp;
 class UnaryOp {
@@ -249,6 +254,9 @@ class UnaryOp {
         }
         ppc.append(`${op_name} ${this.v.pretty_print()} -> ${this.dest.pretty_print()};`, this.span);
     }
+    accept(visitor) {
+        return visitor.visitUnaryOp(this);
+    }
 }
 exports.UnaryOp = UnaryOp;
 class StmtMarker {
@@ -257,6 +265,9 @@ class StmtMarker {
     }
     pretty_print(ppc) {
         ppc.append_marker(`// line ${this.span.start_line}: ${diagnostics.get_line(this.span.source, this.span.start_line)}`);
+    }
+    accept(visitor) {
+        return visitor.visitStmtMarker(this);
     }
 }
 exports.StmtMarker = StmtMarker;
