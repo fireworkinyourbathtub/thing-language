@@ -3,6 +3,7 @@ import * as bytecode from './bytecode';
 import * as lexer from './lexer';
 import * as parser from './parser';
 import * as compiler from './compiler';
+import * as vm from './vm';
 
 declare const ace: any;
 
@@ -18,11 +19,12 @@ document.getElementById('submitbutton')!.addEventListener('click', function() {
     let lexed = lexer.lex(input);
     let parsed = parser.parse(lexed);
     if (parsed) {
-        let result = compiler.compile(parsed);
+        let compiled = compiler.compile(parsed);
+        vm.interpret(compiled);
         let ppc = new bytecode.PrettyPrintContext();
-        ppc.pretty_print_instrs(result);
-        document.getElementById('compiledcodeview')!.innerHTML = ppc.result;
-        console.log(result);
+        ppc.pretty_print_instrs(compiled);
+        document.getElementById('compiledcodeview')!.textContent = ppc.result;
+        console.log(compiled);
         console.log(ppc.result);
     }
 });

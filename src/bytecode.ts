@@ -16,7 +16,12 @@ export class Register implements Value {
 
 export class Nil implements Value {
     constructor() {}
-    pretty_print() { return `nil`; }
+    pretty_print() { return 'nil'; }
+}
+
+export class Function implements Value {
+    constructor(public readonly name: string, public readonly params: string[], public readonly instructions: Instruction[]) {}
+    pretty_print() { return `<function '${this.name}'>`; }
 }
 
 export class Constant<T> implements Value {
@@ -35,18 +40,6 @@ export class MakeVar implements Instruction {
     constructor(public readonly span: diagnostics.Span, public readonly name: string, public readonly value: Value) {}
     pretty_print(ppc: PrettyPrintContext) {
         ppc.append(`make_var ${this.name} = ${this.value.pretty_print()};`, this.span);
-    }
-}
-
-export class DefineFun implements Instruction {
-    constructor(public readonly span: diagnostics.Span, public readonly name: string, public readonly params: string[], public readonly instructions: Instruction[]) {}
-    pretty_print(ppc: PrettyPrintContext) {
-        let params_str = '';
-        ppc.append(`define_function ${this.name}(${this.params.join()}) {`, this.span)
-        ppc.indent();
-        ppc.pretty_print_instrs(this.instructions);
-        ppc.dedent();
-        ppc.append_no_span(`}`)
     }
 }
 

@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PrettyPrintContext = exports.StmtMarker = exports.UnaryOp = exports.BinaryOp = exports.Call = exports.Assign = exports.ReadVar = exports.EndScope = exports.StartScope = exports.Return = exports.If = exports.While = exports.DefineFun = exports.MakeVar = exports.Print = exports.Constant = exports.Nil = exports.Register = void 0;
+exports.PrettyPrintContext = exports.StmtMarker = exports.UnaryOp = exports.BinaryOp = exports.Call = exports.Assign = exports.ReadVar = exports.EndScope = exports.StartScope = exports.Return = exports.If = exports.While = exports.MakeVar = exports.Print = exports.Constant = exports.Function = exports.Nil = exports.Register = void 0;
 const diagnostics = __importStar(require("./diagnostics"));
 const ast = __importStar(require("./ast"));
 class Register {
@@ -35,9 +35,18 @@ class Register {
 exports.Register = Register;
 class Nil {
     constructor() { }
-    pretty_print() { return `nil`; }
+    pretty_print() { return 'nil'; }
 }
 exports.Nil = Nil;
+class Function {
+    constructor(name, params, instructions) {
+        this.name = name;
+        this.params = params;
+        this.instructions = instructions;
+    }
+    pretty_print() { return `<function '${this.name}'>`; }
+}
+exports.Function = Function;
 class Constant {
     constructor(x) {
         this.x = x;
@@ -66,23 +75,6 @@ class MakeVar {
     }
 }
 exports.MakeVar = MakeVar;
-class DefineFun {
-    constructor(span, name, params, instructions) {
-        this.span = span;
-        this.name = name;
-        this.params = params;
-        this.instructions = instructions;
-    }
-    pretty_print(ppc) {
-        let params_str = '';
-        ppc.append(`define_function ${this.name}(${this.params.join()}) {`, this.span);
-        ppc.indent();
-        ppc.pretty_print_instrs(this.instructions);
-        ppc.dedent();
-        ppc.append_no_span(`}`);
-    }
-}
-exports.DefineFun = DefineFun;
 class While {
     constructor(span, check_code, check, body_code) {
         this.span = span;

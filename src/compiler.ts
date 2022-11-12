@@ -71,7 +71,8 @@ class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<bytecode.Value>
         let fn_compiler = new Compiler(register_context);
         fn_compiler.compile_stmt(stmt.body);
 
-        this.instruction(new bytecode.DefineFun(stmt.span, stmt.name, stmt.params, fn_compiler.instructions));
+        let fn = new bytecode.Function(stmt.name, stmt.params, fn_compiler.instructions);
+        this.instruction(new bytecode.MakeVar(stmt.span, stmt.name, fn));
     }
 
     visitForStmt(stmt: ast.ForStmt) {
