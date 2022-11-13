@@ -71,7 +71,7 @@ export interface CallExpr extends diagnostics.Located {
 export interface LogicalExpr extends diagnostics.Located {
     type: 'LogicalExpr';
     left: Expr;
-    operator: LogicalOperator;
+    op: LogicalOperator;
     right: Expr;
 }
 // interface SetExpr extends diagnostics.Located {

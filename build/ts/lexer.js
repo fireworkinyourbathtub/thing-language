@@ -23,240 +23,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.lex = exports.EOF = exports.BoolLiteral = exports.NumberLiteral = exports.StringLiteral = exports.Identifier = exports.While = exports.Var = exports.This = exports.Super = exports.Return = exports.Print = exports.Or = exports.Nil = exports.If = exports.Fun = exports.For = exports.Else = exports.Class = exports.And = exports.BangEqual = exports.GreaterEqual = exports.EqualEqual = exports.LessEqual = exports.Bang = exports.Greater = exports.Equal = exports.Less = exports.Semicolon = exports.CBrace = exports.OBrace = exports.Slash = exports.Star = exports.Minus = exports.Plus = exports.Dot = exports.Comma = exports.CParen = exports.OParen = void 0;
+exports.lex = void 0;
 const diagnostics = __importStar(require("./diagnostics"));
-class OParen {
-    constructor() {
-        this.type = "'('";
-    }
-}
-exports.OParen = OParen;
-class CParen {
-    constructor() {
-        this.type = "')'";
-    }
-}
-exports.CParen = CParen;
-class Comma {
-    constructor() {
-        this.type = "','";
-    }
-}
-exports.Comma = Comma;
-class Dot {
-    constructor() {
-        this.type = "'.'";
-    }
-}
-exports.Dot = Dot;
-class Plus {
-    constructor() {
-        this.type = "'+'";
-    }
-}
-exports.Plus = Plus;
-class Minus {
-    constructor() {
-        this.type = "'-'";
-    }
-}
-exports.Minus = Minus;
-class Star {
-    constructor() {
-        this.type = "'*'";
-    }
-}
-exports.Star = Star;
-class Slash {
-    constructor() {
-        this.type = "'/'";
-    }
-}
-exports.Slash = Slash;
-class OBrace {
-    constructor() {
-        this.type = "'{'";
-    }
-}
-exports.OBrace = OBrace;
-class CBrace {
-    constructor() {
-        this.type = "'}'";
-    }
-}
-exports.CBrace = CBrace;
-class Semicolon {
-    constructor() {
-        this.type = "';'";
-    }
-}
-exports.Semicolon = Semicolon;
-class Less {
-    constructor() {
-        this.type = "'<'";
-    }
-}
-exports.Less = Less;
-class Equal {
-    constructor() {
-        this.type = "'='";
-    }
-}
-exports.Equal = Equal;
-class Greater {
-    constructor() {
-        this.type = "'>'";
-    }
-}
-exports.Greater = Greater;
-class Bang {
-    constructor() {
-        this.type = "'!'";
-    }
-}
-exports.Bang = Bang;
-class LessEqual {
-    constructor() {
-        this.type = "'<='";
-    }
-}
-exports.LessEqual = LessEqual;
-class EqualEqual {
-    constructor() {
-        this.type = "'=='";
-    }
-}
-exports.EqualEqual = EqualEqual;
-class GreaterEqual {
-    constructor() {
-        this.type = "'>='";
-    }
-}
-exports.GreaterEqual = GreaterEqual;
-class BangEqual {
-    constructor() {
-        this.type = "'!='";
-    }
-}
-exports.BangEqual = BangEqual;
-class And {
-    constructor() {
-        this.type = "'and'";
-    }
-}
-exports.And = And;
-class Class {
-    constructor() {
-        this.type = "'class'";
-    }
-}
-exports.Class = Class;
-class Else {
-    constructor() {
-        this.type = "'else'";
-    }
-}
-exports.Else = Else;
-class For {
-    constructor() {
-        this.type = "'for'";
-    }
-}
-exports.For = For;
-class Fun {
-    constructor() {
-        this.type = "'fun'";
-    }
-}
-exports.Fun = Fun;
-class If {
-    constructor() {
-        this.type = "'if'";
-    }
-}
-exports.If = If;
-class Nil {
-    constructor() {
-        this.type = "'nil'";
-    }
-}
-exports.Nil = Nil;
-class Or {
-    constructor() {
-        this.type = "'or'";
-    }
-}
-exports.Or = Or;
-class Print {
-    constructor() {
-        this.type = "'print'";
-    }
-}
-exports.Print = Print;
-class Return {
-    constructor() {
-        this.type = "'return'";
-    }
-}
-exports.Return = Return;
-class Super {
-    constructor() {
-        this.type = "'super'";
-    }
-}
-exports.Super = Super;
-class This {
-    constructor() {
-        this.type = "'this'";
-    }
-}
-exports.This = This;
-class Var {
-    constructor() {
-        this.type = "'var'";
-    }
-}
-exports.Var = Var;
-class While {
-    constructor() {
-        this.type = "'while'";
-    }
-}
-exports.While = While;
-class Identifier {
-    constructor(name) {
-        this.name = name;
-        this.type = "identifier";
-    }
-}
-exports.Identifier = Identifier;
-class StringLiteral {
-    constructor(str) {
-        this.str = str;
-        this.type = "string literal";
-    }
-}
-exports.StringLiteral = StringLiteral;
-class NumberLiteral {
-    constructor(num) {
-        this.num = num;
-        this.type = "number literal";
-    }
-}
-exports.NumberLiteral = NumberLiteral;
-class BoolLiteral {
-    constructor(bool) {
-        this.bool = bool;
-        this.type = "bool literal";
-    }
-}
-exports.BoolLiteral = BoolLiteral;
-class EOF {
-    constructor() {
-        this.type = "eof";
-    }
-}
-exports.EOF = EOF;
 class BadCharacter {
     constructor(ch) {
         this.ch = ch;
@@ -283,7 +51,7 @@ class Lexer {
                 tokens.push(Object.assign({ span: new diagnostics.Span(this.source, tok_start, tok_end) }, tok));
             }
         }
-        let eof = Object.assign(Object.assign({}, new EOF()), { span: this.span(this.ind) });
+        let eof = Object.assign(Object.assign({}, { type: "eof" }), { span: this.span(this.ind) });
         return [tokens, eof];
     }
     lex_single_token(start_ind) {
@@ -292,13 +60,13 @@ class Lexer {
             return null;
         }
         switch (c) {
-            case '(': return new OParen();
-            case ')': return new CParen();
-            case ',': return new Comma();
-            case '.': return new Dot();
-            case '+': return new Plus();
-            case '-': return new Minus();
-            case '*': return new Star();
+            case '(': return { type: "'('" };
+            case ')': return { type: "')'" };
+            case ',': return { type: "','" };
+            case '.': return { type: "'.'" };
+            case '+': return { type: "'+'" };
+            case '-': return { type: "'-'" };
+            case '*': return { type: "'*'" };
             case '/':
                 if (this.match('/')) {
                     while (!this.at_end() && this.peek() != '\n') {
@@ -308,20 +76,20 @@ class Lexer {
                     return null;
                 }
                 else {
-                    return new Slash();
+                    return { type: "'/'" };
                 }
-            case '{': return new OBrace();
-            case '}': return new CBrace();
-            case ';': return new Semicolon();
+            case '{': return { type: "'{'" };
+            case '}': return { type: "'}'" };
+            case ';': return { type: "';'" };
             case ' ':
             case '\n':
             case '\r':
             case '\t':
                 return null;
-            case '!': return this.match('=') ? new BangEqual() : new Bang();
-            case '=': return this.match('=') ? new EqualEqual() : new Equal();
-            case '<': return this.match('=') ? new LessEqual() : new Less();
-            case '>': return this.match('=') ? new GreaterEqual() : new Greater();
+            case '!': return this.match('=') ? { type: "'!='" } : { type: "'!'" };
+            case '=': return this.match('=') ? { type: "'=='" } : { type: "'='" };
+            case '<': return this.match('=') ? { type: "'<='" } : { type: "'<'" };
+            case '>': return this.match('=') ? { type: "'>='" } : { type: "'>'" };
             case '"': return this.string(start_ind);
             default:
                 if (this.is_digit(c)) {
@@ -348,7 +116,7 @@ class Lexer {
         let lit_end = this.ind;
         this.advance();
         let value = this.source.substring(lit_start, lit_end);
-        return new StringLiteral(value);
+        return { type: "string literal", str: value };
     }
     number() {
         let start = this.ind - 1;
@@ -360,7 +128,7 @@ class Lexer {
             while (this.is_digit_(this.peek()))
                 this.advance();
         }
-        return new NumberLiteral(parseFloat(this.source.substring(start, this.ind)));
+        return { type: "number literal", num: parseFloat(this.source.substring(start, this.ind)) };
     }
     identifier() {
         let start = this.ind - 1;
@@ -369,23 +137,23 @@ class Lexer {
         }
         let str = this.source.substring(start, this.ind);
         switch (str) {
-            case "and": return new And();
-            case "class": return new Class();
-            case "else": return new Else();
-            case "false": return new BoolLiteral(false);
-            case "for": return new For();
-            case "fun": return new Fun();
-            case "if": return new If();
-            case "nil": return new Nil();
-            case "or": return new Or();
-            case "print": return new Print();
-            case "return": return new Return();
-            case "super": return new Super();
-            case "this": return new This();
-            case "true": return new BoolLiteral(true);
-            case "var": return new Var();
-            case "while": return new While();
-            default: return new Identifier(str);
+            case "and": return { type: "'and'" };
+            case "class": return { type: "'class'" };
+            case "else": return { type: "'else'" };
+            case "false": return { type: "bool literal", bool: false };
+            case "for": return { type: "'for'" };
+            case "fun": return { type: "'fun'" };
+            case "if": return { type: "'if'" };
+            case "nil": return { type: "'nil'" };
+            case "or": return { type: "'or'" };
+            case "print": return { type: "'print'" };
+            case "return": return { type: "'return'" };
+            case "super": return { type: "'super'" };
+            case "this": return { type: "'this'" };
+            case "true": return { type: "bool literal", bool: true };
+            case "var": return { type: "'var'" };
+            case "while": return { type: "'while'" };
+            default: return { type: "identifier", name: str };
         }
     }
     is_digit(x) {

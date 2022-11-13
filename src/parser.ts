@@ -20,11 +20,25 @@ function astify_binary_expr([comp, ops]: [ast.Expr, [lexer.BinaryOperatorTokens,
             case  "'=='": op_ast = ast.BinaryOperator.EqualEqual; break;
             case  "'>='": op_ast = ast.BinaryOperator.GreaterEqual; break;
             case  "'!='": op_ast = ast.BinaryOperator.BangEqual; break;
-
-            default: throw Error('unreachable');
         }
 
         comp = { type: 'BinaryExpr', span: diagnostics.join_spans(comp.span, right.span), left: comp, right, op: op_ast };
+    }
+
+    return comp;
+}
+function astify_logic_expr([comp, ops]: [ast.Expr, [lexer.And | lexer.Or, ast.Expr][]]) {
+    let cur;
+    while (cur = ops.shift()) {
+        let [op, right] = cur;
+
+        let op_ast;
+        switch (op.type) {
+            case  "'and'": op_ast = ast.LogicalOperator.And; break;
+            case  "'or'": op_ast = ast.LogicalOperator.Or; break;
+        }
+
+        comp = { type: 'LogicalExpr', span: diagnostics.join_spans(comp.span, right.span), left: comp, right, op: op_ast };
     }
 
     return comp;
@@ -58,7 +72,7 @@ let call: peg.PEG<ast.Expr> =
     ).apply(([expr, ops]) => {
         let cur_op;
         while (cur_op = ops.shift()) {
-            if (cur_op instanceof lexer.Identifier) {
+            if (!Array.isArray(cur_op)) {
                 let ident = cur_op;
                 // expr =
                 throw new Error("not implemented yet"); // TODO
@@ -137,9 +151,9 @@ let equality =
         )
     );
 
-let logic_and = equality.chain(new peg.ZeroMore(new peg.Token("'and'").chain(equality))).apply(astify_binary_expr);
+let logic_and = equality.chain(new peg.ZeroMore(new peg.Token<lexer.And>("'and'").chain(equality))).apply(astify_logic_expr);
 
-let logic_or = logic_and.chain(new peg.ZeroMore(new peg.Token("'or'").chain(logic_and))).apply(astify_binary_expr);
+let logic_or = logic_and.chain(new peg.ZeroMore(new peg.Token<lexer.Or>("'or'").chain(logic_and))).apply(astify_logic_expr);
 
 let assignment: peg.PEG<ast.Expr>;
 assignment =

@@ -192,7 +192,6 @@ function compile_expr(expr, instructions, register_context) {
         }
         case 'LogicalExpr': {
             throw new Error("not implemented yet"); // TODO
-            break;
         }
     }
 }

@@ -24,7 +24,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parse = void 0;
-const lexer = __importStar(require("./lexer"));
 const diagnostics = __importStar(require("./diagnostics"));
 const ast = __importStar(require("./ast"));
 const peg = __importStar(require("./peg"));
@@ -64,9 +63,25 @@ function astify_binary_expr([comp, ops]) {
             case "'!='":
                 op_ast = ast.BinaryOperator.BangEqual;
                 break;
-            default: throw Error('unreachable');
         }
         comp = { type: 'BinaryExpr', span: diagnostics.join_spans(comp.span, right.span), left: comp, right, op: op_ast };
+    }
+    return comp;
+}
+function astify_logic_expr([comp, ops]) {
+    let cur;
+    while (cur = ops.shift()) {
+        let [op, right] = cur;
+        let op_ast;
+        switch (op.type) {
+            case "'and'":
+                op_ast = ast.LogicalOperator.And;
+                break;
+            case "'or'":
+                op_ast = ast.LogicalOperator.Or;
+                break;
+        }
+        comp = { type: 'LogicalExpr', span: diagnostics.join_spans(comp.span, right.span), left: comp, right, op: op_ast };
     }
     return comp;
 }
@@ -81,7 +96,7 @@ let primary = new peg.Token('bool literal').apply(tok => ({ type: 'BoolLiteral',
 let call = primary.chain(new peg.ZeroMore(new peg.Choice(new peg.Token("'('").chain(new peg.Optional(args)).chain(new peg.Token("')'")).apply(([[oparen, args], cparen]) => { let x = [args, cparen]; return x; }), new peg.Token("'.'").chain(new peg.Token("identifier")).apply(([dot, ident]) => ident)))).apply(([expr, ops]) => {
     let cur_op;
     while (cur_op = ops.shift()) {
-        if (cur_op instanceof lexer.Identifier) {
+        if (!Array.isArray(cur_op)) {
             let ident = cur_op;
             // expr =
             throw new Error("not implemented yet"); // TODO
@@ -119,8 +134,8 @@ let factor = new peg.Apply(astify_binary_expr, new peg.Chain(unary, new peg.Zero
 let term = new peg.Apply(astify_binary_expr, new peg.Chain(factor, new peg.ZeroMore(new peg.Chain(new peg.Choice(new peg.Token("'+'"), new peg.Token("'-'")), factor))));
 let comparison = new peg.Apply(astify_binary_expr, new peg.Chain(term, new peg.ZeroMore(new peg.Chain(new peg.Choice(new peg.Choice(new peg.Choice(new peg.Token("'<'"), new peg.Token("'<='")), new peg.Token("'>'")), new peg.Token("'>='")), term))));
 let equality = new peg.Apply(astify_binary_expr, new peg.Chain(comparison, new peg.ZeroMore(new peg.Chain(new peg.Choice(new peg.Token("'=='"), new peg.Token("'!='")), comparison))));
-let logic_and = equality.chain(new peg.ZeroMore(new peg.Token("'and'").chain(equality))).apply(astify_binary_expr);
-let logic_or = logic_and.chain(new peg.ZeroMore(new peg.Token("'or'").chain(logic_and))).apply(astify_binary_expr);
+let logic_and = equality.chain(new peg.ZeroMore(new peg.Token("'and'").chain(equality))).apply(astify_logic_expr);
+let logic_or = logic_and.chain(new peg.ZeroMore(new peg.Token("'or'").chain(logic_and))).apply(astify_logic_expr);
 let assignment;
 assignment =
     new peg.Optional(call.chain(new peg.Token("'.'"))).chain(new peg.Token("identifier")).chain(new peg.Token("'='")).chain(new peg.Indirect(() => assignment))

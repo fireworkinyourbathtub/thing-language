@@ -1,5 +1,13 @@
 import * as diagnostics from './diagnostics';
 
+export type Token =
+    OParen | CParen | Comma | Dot | Plus | Minus | Star | Slash |
+    OBrace | CBrace | Semicolon |
+    Less | Equal | Greater | Bang | LessEqual | EqualEqual | GreaterEqual | BangEqual |
+    And | Class | Else | For | Fun | If | Nil | Or | Print | Return | Super | This | Var | While |
+    Identifier | StringLiteral | NumberLiteral | BoolLiteral |
+    EOF;
+
 export type TokenType =
     "'('" | "')'" | "','" | "'.'" | "'+'" | "'-'" | "'*'" | "'/'" |
     "'{'" | "'}'" | "';'" |
@@ -8,73 +16,65 @@ export type TokenType =
     "identifier" | "number literal" | "string literal" | "bool literal" |
     "eof";
 
-export type BinaryOperatorTokens = Plus | Minus | Star | Slash | Less | Equal | Greater | Bang | LessEqual | EqualEqual | GreaterEqual | BangEqual;
+export type BinaryOperatorTokens = Plus | Minus | Star | Slash | Less | Greater | LessEqual | EqualEqual | GreaterEqual | BangEqual;
 
-export interface Token {
-    readonly type: TokenType;
+export interface OParen { type: "'('"; }
+export interface CParen { type: "')'"; }
+export interface Comma { type: "','"; }
+export interface Dot { type: "'.'"; }
+export interface Plus { type: "'+'"; }
+export interface Minus { type: "'-'"; }
+export interface Star { type: "'*'"; }
+export interface Slash { type: "'/'"; }
+
+export interface OBrace { type: "'{'"; }
+export interface CBrace { type: "'}'"; }
+export interface Semicolon { type: "';'"; }
+
+export interface Less { type: "'<'"; }
+export interface Equal { type: "'='"; }
+export interface Greater { type: "'>'"; }
+export interface Bang { type: "'!'"; }
+export interface LessEqual { type: "'<='"; }
+export interface EqualEqual { type: "'=='"; }
+export interface GreaterEqual { type: "'>='"; }
+export interface BangEqual { type: "'!='"; }
+
+export interface And { type: "'and'"; }
+export interface Class { type: "'class'"; }
+export interface Else { type: "'else'"; }
+export interface For { type: "'for'"; }
+export interface Fun { type: "'fun'"; }
+export interface If { type: "'if'"; }
+export interface Nil { type: "'nil'"; }
+export interface Or { type: "'or'"; }
+export interface Print { type: "'print'"; }
+export interface Return { type: "'return'"; }
+export interface Super { type: "'super'"; }
+export interface This { type: "'this'"; }
+export interface Var { type: "'var'"; }
+export interface While { type: "'while'"; }
+
+export interface Identifier {
+    type: "identifier";
+    name: string;
 }
 
-export class OParen implements Token { readonly type: TokenType = "'('"; }
-export class CParen implements Token { readonly type: TokenType = "')'"; }
-export class Comma implements Token { readonly type: TokenType = "','"; }
-export class Dot implements Token { readonly type: TokenType = "'.'"; }
-export class Plus implements Token { readonly type: TokenType = "'+'"; }
-export class Minus implements Token { readonly type: TokenType = "'-'"; }
-export class Star implements Token { readonly type: TokenType = "'*'"; }
-export class Slash implements Token { readonly type: TokenType = "'/'"; }
-
-export class OBrace implements Token { readonly type: TokenType = "'{'"; }
-export class CBrace implements Token { readonly type: TokenType = "'}'"; }
-export class Semicolon implements Token { readonly type: TokenType = "';'"; }
-
-export class Less implements Token { readonly type: TokenType = "'<'"; }
-export class Equal implements Token { readonly type: TokenType = "'='"; }
-export class Greater implements Token { readonly type: TokenType = "'>'"; }
-export class Bang implements Token { readonly type: TokenType = "'!'"; }
-export class LessEqual implements Token { readonly type: TokenType = "'<='"; }
-export class EqualEqual implements Token { readonly type: TokenType = "'=='"; }
-export class GreaterEqual implements Token { readonly type: TokenType = "'>='"; }
-export class BangEqual implements Token { readonly type: TokenType = "'!='"; }
-
-export class And implements Token { readonly type: TokenType = "'and'"; }
-export class Class implements Token { readonly type: TokenType = "'class'"; }
-export class Else implements Token { readonly type: TokenType = "'else'"; }
-export class For implements Token { readonly type: TokenType = "'for'"; }
-export class Fun implements Token { readonly type: TokenType = "'fun'"; }
-export class If implements Token { readonly type: TokenType = "'if'"; }
-export class Nil implements Token { readonly type: TokenType = "'nil'"; }
-export class Or implements Token { readonly type: TokenType = "'or'"; }
-export class Print implements Token { readonly type: TokenType = "'print'"; }
-export class Return implements Token { readonly type: TokenType = "'return'"; }
-export class Super implements Token { readonly type: TokenType = "'super'"; }
-export class This implements Token { readonly type: TokenType = "'this'"; }
-export class Var implements Token { readonly type: TokenType = "'var'"; }
-export class While implements Token { readonly type: TokenType = "'while'"; }
-
-export class Identifier implements Token {
-    constructor(public name: string) {}
-
-    readonly type: TokenType = "identifier";
+export interface StringLiteral {
+    type: "string literal";
+    str: string;
+}
+export interface NumberLiteral {
+    type: "number literal";
+    num: number;
 }
 
-export class StringLiteral implements Token {
-    constructor(public str: string) {}
-
-    readonly type: TokenType = "string literal";
-}
-export class NumberLiteral implements Token {
-    constructor(public num: number) {}
-
-    readonly type: TokenType = "number literal";
+export interface BoolLiteral {
+    type: "bool literal";
+    bool: boolean;
 }
 
-export class BoolLiteral implements Token {
-    constructor(public bool: boolean) {}
-
-    readonly type: TokenType = "bool literal";
-}
-
-export class EOF implements Token { readonly type: TokenType = "eof"; }
+export interface EOF { type: "eof"; }
 
 class BadCharacter implements diagnostics.Diagnostic {
     public message: string;
@@ -110,7 +110,7 @@ class Lexer {
             }
         }
 
-        let eof = { ...new EOF(), span: this.span(this.ind) };
+        let eof = { ...{ type: "eof" } as const, span: this.span(this.ind) };
 
         return [tokens, eof];
     }
@@ -123,24 +123,24 @@ class Lexer {
         }
 
         switch (c) {
-            case '(': return new OParen();
-            case ')': return new CParen();
-            case ',': return new Comma();
-            case '.': return new Dot();
-            case '+': return new Plus();
-            case '-': return new Minus();
-            case '*': return new Star();
+            case '(': return { type: "'('" } as const;
+            case ')': return { type: "')'" } as const;
+            case ',': return { type: "','" } as const;
+            case '.': return { type: "'.'" } as const;
+            case '+': return { type: "'+'" } as const;
+            case '-': return { type: "'-'" } as const;
+            case '*': return { type: "'*'" } as const;
             case '/':
                 if (this.match('/')) {
                     while (!this.at_end() && this.peek()! != '\n') { this.advance(); };
                     return null;
                 } else {
-                    return new Slash();
+                    return { type: "'/'" } as const;
                 }
 
-            case '{': return new OBrace();
-            case '}': return new CBrace();
-            case ';': return new Semicolon();
+            case '{': return { type: "'{'" } as const;
+            case '}': return { type: "'}'" } as const;
+            case ';': return { type: "';'" } as const;
 
             case ' ':
             case '\n':
@@ -148,10 +148,10 @@ class Lexer {
             case '\t':
                 return null;
 
-            case '!': return this.match('=') ? new BangEqual() : new Bang();
-            case '=': return this.match('=') ? new EqualEqual() : new Equal();
-            case '<': return this.match('=') ? new LessEqual() : new Less();
-            case '>': return this.match('=') ? new GreaterEqual() : new Greater();
+            case '!': return this.match('=') ? { type: "'!='" } as const : { type: "'!'" } as const;
+            case '=': return this.match('=') ? { type: "'=='" } as const : { type: "'='" } as const;
+            case '<': return this.match('=') ? { type: "'<='" } as const : { type: "'<'" } as const;
+            case '>': return this.match('=') ? { type: "'>='" } as const : { type: "'>'" } as const;
 
             case '"': return this.string(start_ind);
 
@@ -184,7 +184,7 @@ class Lexer {
 
         let value = this.source.substring(lit_start, lit_end);
 
-        return new StringLiteral(value);
+        return { type: "string literal", str: value };
     }
 
     number(): Token | null {
@@ -197,7 +197,7 @@ class Lexer {
             while (this.is_digit_(this.peek())) this.advance();
         }
 
-        return new NumberLiteral(parseFloat(this.source.substring(start, this.ind)));
+        return { type: "number literal", num: parseFloat(this.source.substring(start, this.ind)) };
     }
 
     identifier(): Token | null {
@@ -206,23 +206,23 @@ class Lexer {
 
         let str = this.source.substring(start, this.ind);
         switch (str) {
-            case "and": return new And();
-            case "class": return new Class();
-            case "else": return new Else();
-            case "false": return new BoolLiteral(false);
-            case "for": return new For();
-            case "fun": return new Fun();
-            case "if": return new If();
-            case "nil": return new Nil();
-            case "or": return new Or();
-            case "print": return new Print();
-            case "return": return new Return();
-            case "super": return new Super();
-            case "this": return new This();
-            case "true": return new BoolLiteral(true);
-            case "var": return new Var();
-            case "while": return new While();
-            default: return new Identifier(str);
+            case "and": return { type: "'and'" } as const;
+            case "class": return { type: "'class'" } as const;
+            case "else": return { type: "'else'" } as const;
+            case "false": return { type: "bool literal", bool: false } as const;
+            case "for": return { type: "'for'" } as const;
+            case "fun": return { type: "'fun'" } as const;
+            case "if": return { type: "'if'" } as const;
+            case "nil": return { type: "'nil'" } as const;
+            case "or": return { type: "'or'" } as const;
+            case "print": return { type: "'print'" } as const;
+            case "return": return { type: "'return'" } as const;
+            case "super": return { type: "'super'" } as const;
+            case "this": return { type: "'this'" } as const;
+            case "true": return { type: "bool literal", bool: true };
+            case "var": return { type: "'var'" } as const;
+            case "while": return { type: "'while'" } as const;
+            default: return { type: "identifier", name: str } as const;
         }
     }
 
