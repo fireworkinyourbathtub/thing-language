@@ -50,7 +50,7 @@ export async function interpret_(globals: runtime.Environment, env: runtime.Envi
 
     for (let instr of instruction_list(registers, instructions)) {
         tracker.focus_instr(instr);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => document.getElementById("stepbutton")!.addEventListener("click", resolve));
 
         switch (instr.type) {
             case 'StmtMarker': break;
@@ -218,7 +218,10 @@ export async function interpret_(globals: runtime.Environment, env: runtime.Envi
             }
 
             case 'Print': {
-                console.log(instr.value.resolve(registers).stringify()); // TODO
+                let tn = document.createTextNode(instr.value.resolve(registers).stringify());
+                let p = document.createElement('p');
+                p.appendChild(tn);
+                document.getElementById('printoutput')!.appendChild(p);
                 break;
             }
 

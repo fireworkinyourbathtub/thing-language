@@ -83,7 +83,7 @@ function interpret_(globals, env, instructions) {
         let registers = [];
         for (let instr of instruction_list(registers, instructions)) {
             tracker.focus_instr(instr);
-            yield new Promise((resolve) => setTimeout(resolve, 1000));
+            yield new Promise((resolve) => document.getElementById("stepbutton").addEventListener("click", resolve));
             switch (instr.type) {
                 case 'StmtMarker': break;
                 case 'UnaryOp': {
@@ -249,7 +249,10 @@ function interpret_(globals, env, instructions) {
                     return instr.value.resolve(registers);
                 }
                 case 'Print': {
-                    console.log(instr.value.resolve(registers).stringify()); // TODO
+                    let tn = document.createTextNode(instr.value.resolve(registers).stringify());
+                    let p = document.createElement('p');
+                    p.appendChild(tn);
+                    document.getElementById('printoutput').appendChild(p);
                     break;
                 }
                 case 'If': break; // handled by instruction_list

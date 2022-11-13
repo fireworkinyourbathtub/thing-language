@@ -12,9 +12,15 @@ let editor = ace.edit("codeeditor");
 editor.setOption("printMarginColumn", false);
 
 document.getElementById('submitbutton')!.addEventListener('click', function() {
-    let inputcodebox: any = document.getElementById('inputcodebox')!;
     let input: string = editor.getValue();
     diagnostics.clear();
+
+    {
+        let printoutput = document.getElementById('printoutput')!;
+        while (printoutput.lastChild) {
+            printoutput.removeChild(printoutput.lastChild);
+        }
+    }
 
     let lexed = lexer.lex(input);
     let parsed = parser.parse(lexed);
