@@ -38,10 +38,10 @@ function* instruction_list_1(registers: runtime.RuntimeValue[], instr: bytecode.
 
 export function interpret(instructions: bytecode.Instruction[]) {
     let globals = new runtime.Environment(null);
-    interpret_(globals, instructions);
+    interpret_(globals, globals, instructions);
 }
 
-export function interpret_(env: runtime.Environment, instructions: bytecode.Instruction[]): runtime.RuntimeValue {
+export function interpret_(globals: runtime.Environment, env: runtime.Environment, instructions: bytecode.Instruction[]): runtime.RuntimeValue {
     let registers: runtime.RuntimeValue[] = [];
 
     for (let instr of instruction_list(registers, instructions)) {
@@ -178,7 +178,7 @@ export function interpret_(env: runtime.Environment, instructions: bytecode.Inst
                 if (args.length != callee_.arity)
                     throw new Error(`wrong number of arguments: expected ${callee_.arity}, got ${args.length}`);
                 else
-                    registers[instr.dest.index] = callee_.call(env, args);
+                    registers[instr.dest.index] = callee_.call(globals, args);
 
                 break;
             }

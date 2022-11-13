@@ -30,7 +30,7 @@ export interface Value {
 
 export interface Callable {
     arity: number;
-    call(parent_env: Environment, args: RuntimeValue[]): RuntimeValue;
+    call(globals: Environment, args: RuntimeValue[]): RuntimeValue;
 }
 
 export interface RuntimeValue extends Value {
@@ -73,13 +73,13 @@ export class Function implements Value, RuntimeValue, Callable {
     type() { return 'function'; }
     stringify() { return `<function '${this.name}'>`; }
 
-    call(parent_env: Environment, args: RuntimeValue[]) {
-        let env = new Environment(parent_env);
+    call(globals: Environment, args: RuntimeValue[]) {
+        let env = new Environment(globals);
         for (let i = 0; i < this.params.length; ++i) { // should be same size
             env.put_variable(this.params[i], args[i]);
         }
 
-        return vm.interpret_(env, this.instructions);
+        return vm.interpret_(globals, env, this.instructions);
     }
 }
 

@@ -82,12 +82,12 @@ class Function {
     is_truthy() { return true; }
     type() { return 'function'; }
     stringify() { return `<function '${this.name}'>`; }
-    call(parent_env, args) {
-        let env = new Environment(parent_env);
+    call(globals, args) {
+        let env = new Environment(globals);
         for (let i = 0; i < this.params.length; ++i) { // should be same size
             env.put_variable(this.params[i], args[i]);
         }
-        return vm.interpret_(env, this.instructions);
+        return vm.interpret_(globals, env, this.instructions);
     }
 }
 exports.Function = Function;

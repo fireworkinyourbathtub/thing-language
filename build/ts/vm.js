@@ -61,10 +61,10 @@ function* instruction_list_1(registers, instr) {
 }
 function interpret(instructions) {
     let globals = new runtime.Environment(null);
-    interpret_(globals, instructions);
+    interpret_(globals, globals, instructions);
 }
 exports.interpret = interpret;
-function interpret_(env, instructions) {
+function interpret_(globals, env, instructions) {
     let registers = [];
     for (let instr of instruction_list(registers, instructions)) {
         switch (instr.type) {
@@ -195,7 +195,7 @@ function interpret_(env, instructions) {
                 registers[instr.dest.index] = result; // TODO: remove !
                 break;
             }
-            case 'Call': { // TODO
+            case 'Call': {
                 let callee = instr.callee.resolve(registers);
                 let args = instr.args.map(x => x.resolve(registers));
                 if (!('call' in callee && 'arity' in callee))
@@ -204,7 +204,7 @@ function interpret_(env, instructions) {
                 if (args.length != callee_.arity)
                     throw new Error(`wrong number of arguments: expected ${callee_.arity}, got ${args.length}`);
                 else
-                    registers[instr.dest.index] = callee_.call(env, args);
+                    registers[instr.dest.index] = callee_.call(globals, args);
                 break;
             }
             case 'Assign': {
