@@ -24,7 +24,7 @@ function astify_binary_expr([comp, ops]: [ast.Expr, [lexer.BinaryOperatorTokens,
             default: throw Error('unreachable');
         }
 
-        comp = new ast.BinaryExpr(diagnostics.join_spans(comp.span, right.span), comp, right, op_ast);
+        comp = { type: 'BinaryExpr', span: diagnostics.join_spans(comp.span, right.span), left: comp, right, op: op_ast };
     }
 
     return comp;
@@ -40,13 +40,13 @@ let fn: peg.PEG<[lexer.Identifier, lexer.Identifier[], ast.BlockStmt]> =
     new peg.Token<lexer.Identifier>("identifier").chain(new peg.Token("'('")).chain(new peg.Optional(params)).chain(new peg.Token("')'")).chain(new peg.Indirect(() => block))
     .apply(([[[[identifier, oparen], params], cparen], block]) => [identifier, params ? params : [], block]);
 
-let primary: peg.PEG<ast.Expr> =
-    new peg.Token<lexer.BoolLiteral>('bool literal').apply(tok => new ast.BoolLiteral(tok.span, tok.bool)).choice(
-    new peg.Token<lexer.Nil>("'nil'").apply(tok => new ast.NilLiteral(tok.span))).choice(
-    new peg.Token<lexer.NumberLiteral>('number literal').apply(tok => new ast.NumberLiteral(tok.span, tok.num))).choice(
-    new peg.Token<lexer.StringLiteral>('string literal').apply(tok => new ast.StringLiteral(tok.span, tok.str))).choice(
-    new peg.Token<lexer.Identifier>("identifier").apply(ident => new ast.VarExpr(ident.span, ident.name))).choice(
-    new peg.Token("'('").chain(new peg.Indirect(expression_indirect)).chain(new peg.Token("')'")).apply(([[oparen, expr], cparen]) => expr));
+let primary: peg.PEG<ast.BoolLiteral | ast.NilLiteral | ast.NumberLiteral | ast.StringLiteral | ast.VarExpr | ast.Expr> =
+    new peg.Token<lexer.BoolLiteral>('bool literal').apply(tok => ({ type: 'BoolLiteral', span: tok.span, value: tok.bool } as const)).choice(
+    new peg.Token<lexer.Nil>("'nil'").apply(tok => ({ type: 'NilLiteral', span: tok.span} as const))).choice(
+    new peg.Token<lexer.NumberLiteral>('number literal').apply(tok => ({ type: 'NumberLiteral', span: tok.span, value: tok.num } as const))).choice(
+    new peg.Token<lexer.StringLiteral>('string literal').apply(tok => ({ type: 'StringLiteral', span: tok.span, value: tok.str } as const))).choice(
+    new peg.Token<lexer.Identifier>("identifier").apply(ident => ({ type: 'VarExpr', span: ident.span, name: ident.name } as const))).choice(
+    new peg.Token("'('").chain(new peg.Indirect(expression_indirect)).chain(new peg.Token("')'")).apply(([[oparen, expr], cparen]) => expr)); // TODO: track parenthesized expressions
 
 
 let call: peg.PEG<ast.Expr> =
@@ -66,7 +66,7 @@ let call: peg.PEG<ast.Expr> =
                 let a: ast.Expr[];
                 if (cur_op[0]) { a = cur_op[0] as ast.Expr[]; }
                 else { a = []; }
-                expr = new ast.CallExpr(diagnostics.join_spans(expr.span, cur_op[1].span), expr, a);
+                expr = ({ type: 'CallExpr', span: diagnostics.join_spans(expr.span, cur_op[1].span), callee: expr, args: a } as const);
             }
         }
         return expr;
@@ -81,7 +81,7 @@ unary =
             case "'!'": op_ast = ast.UnaryOperator.Bang; break;
             default: throw Error('unreachable');
         }
-        return new ast.UnaryExpr(diagnostics.join_spans(op.span, expr.span), op_ast, expr);
+        return ({ type: 'UnaryExpr', span: diagnostics.join_spans(op.span, expr.span), operator: op_ast, operand: expr } as const);
     })
     .choice(call);
 
@@ -144,14 +144,14 @@ let logic_or = logic_and.chain(new peg.ZeroMore(new peg.Token("'or'").chain(logi
 let assignment: peg.PEG<ast.Expr>;
 assignment =
     new peg.Optional(call.chain(new peg.Token("'.'"))).chain(new peg.Token<lexer.Identifier>("identifier")).chain(new peg.Token("'='")).chain(new peg.Indirect(() => assignment))
-        .apply(([[[m_call, ident], eq], assignment]) => new ast.AssignExpr(diagnostics.join_spans(m_call ? m_call[0].span : ident.span, assignment.span), ident.name, assignment))
+        .apply(([[[m_call, ident], eq], assignment]) => ({ type: 'AssignExpr', span: diagnostics.join_spans(m_call ? m_call[0].span : ident.span, assignment.span), name: ident.name, value: assignment } as const))
     .choice(logic_or);
 
 expression = assignment;
 
-let expr_stmt = new peg.Apply(([expr, semi]) => new ast.ExprStmt(diagnostics.join_spans(expr.span, semi.span), expr), new peg.Chain(new peg.Indirect(expression_indirect), new peg.Token("';'")));
+let expr_stmt = new peg.Apply(([expr, semi]) => ({ type: 'ExprStmt', span: diagnostics.join_spans(expr.span, semi.span), expr } as const), new peg.Chain(new peg.Indirect(expression_indirect), new peg.Token("';'")));
 
-let print_stmt = new peg.Apply(([[print, expr], semi]) => new ast.PrintStmt(diagnostics.join_spans(print.span, semi.span), expr), new peg.Chain(new peg.Chain(new peg.Token("'print'"), new peg.Indirect(expression_indirect)), new peg.Token("';'")));
+let print_stmt = new peg.Apply(([[print, expr], semi]) => ({ type: 'PrintStmt', span: diagnostics.join_spans(print.span, semi.span), expr } as const), new peg.Chain(new peg.Chain(new peg.Token("'print'"), new peg.Indirect(expression_indirect)), new peg.Token("';'")));
 
 let var_decl: peg.PEG<ast.VarStmt>;
 let statement: peg.PEG<ast.Stmt>;
@@ -168,12 +168,12 @@ let for_stmt: peg.PEG<ast.ForStmt> =
         new peg.Token("')'")),
         new peg.Indirect(statement_indirect))
         .apply(([[[[[[for_, oparen], initializer], cond], inc], cparen], body]) => {
-            return new ast.ForStmt(diagnostics.join_spans(for_.span, body.span), initializer, cond[0], inc, body, for_.span);
+            return ({ type: 'ForStmt', span: diagnostics.join_spans(for_.span, body.span), initializer, compare: cond[0], increment: inc, body, for_sp: for_.span } as const);
         })
 
 let if_stmt =
     new peg.Apply(
-        ([[[[[if_, oparen], cond], cparen], body], m_else]) => new ast.IfStmt(diagnostics.join_spans(if_.span, m_else ? m_else[1].span : body.span), cond, body, m_else ? m_else[1] : null),
+        ([[[[[if_, oparen], cond], cparen], body], m_else]) => ({ type: 'IfStmt', span: diagnostics.join_spans(if_.span, m_else ? m_else[1].span : body.span), condition: cond, then_branch: body, else_branch: m_else ? m_else[1] : null } as const),
         new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(
             new peg.Token("'if'"),
             new peg.Token("'('")),
@@ -185,13 +185,13 @@ let if_stmt =
 
 let return_stmt =
     new peg.Apply(
-        ([[return_, m_expr], semi]) => new ast.ReturnStmt(diagnostics.join_spans(return_.span, semi.span), m_expr),
+        ([[return_, m_expr], semi]) => ({ type: 'ReturnStmt', span: diagnostics.join_spans(return_.span, semi.span), value: m_expr } as const),
         new peg.Chain(new peg.Chain(new peg.Token("'return'"), new peg.Optional(new peg.Indirect(expression_indirect))), new peg.Token("';'"))
     );
 
 let while_stmt =
     new peg.Apply(
-        ([[[[while_, oparen], cond], cparen], body]) => new ast.WhileStmt(diagnostics.join_spans(while_.span, body.span), cond, body),
+        ([[[[while_, oparen], cond], cparen], body]) => ({ type: 'WhileStmt', span: diagnostics.join_spans(while_.span, body.span), condition: cond, body } as const),
         new peg.Chain(new peg.Chain(new peg.Chain(new peg.Chain(
             new peg.Token("'while'"),
             new peg.Token("'('")),
@@ -202,7 +202,7 @@ let while_stmt =
 
 block =
     new peg.Apply(
-        ([[obrace, decls], cbrace]) => new ast.BlockStmt(diagnostics.join_spans(obrace.span, cbrace.span), decls, obrace.span, cbrace.span),
+        ([[obrace, stmts], cbrace]) => ({ type: 'BlockStmt', span: diagnostics.join_spans(obrace.span, cbrace.span), stmts, obrace_sp: obrace.span, cbrace_sp: cbrace.span }),
         new peg.Chain(new peg.Chain(
             new peg.Token("'{'"),
             new peg.ZeroMore(new peg.Indirect(declaration_indirect))),
@@ -219,10 +219,10 @@ statement =
         .choice(block);
 
 var_decl =
-    new peg.Apply(([[[var_, ident], m_initializer], semi]) => new ast.VarStmt(diagnostics.join_spans(var_.span, semi.span), ident.name, m_initializer ? m_initializer[1] : null),
+    new peg.Apply(([[[var_, ident], m_initializer], semi]) => ({ type: 'VarStmt', span: diagnostics.join_spans(var_.span, semi.span), name: ident.name, initializer: m_initializer ? m_initializer[1] : null }),
         new peg.Chain(new peg.Chain(new peg.Chain(new peg.Token("'var'"), new peg.Token<lexer.Identifier>("identifier")), new peg.Optional(new peg.Chain(new peg.Token("'='"), new peg.Indirect(expression_indirect)))), new peg.Token("';'")));
 
-let fun_decl = new peg.Chain(new peg.Token("'fun'"), fn).apply(([fun, [identifier, params, block]]) => new ast.FunctionStmt(diagnostics.join_spans(fun.span, block.span), identifier.name, params.map(x => x.name), block));
+let fun_decl = new peg.Chain(new peg.Token("'fun'"), fn).apply(([fun, [identifier, params, block]]) => ({ type: 'FunctionStmt', span: diagnostics.join_spans(fun.span, block.span), name: identifier.name, params: params.map(x => x.name), body: block } as const));
 
 declaration = new peg.Choice(new peg.Choice(fun_decl, var_decl), statement);
 

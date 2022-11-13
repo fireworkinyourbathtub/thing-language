@@ -15,208 +15,199 @@ class RegisterContext {
     }
 }
 
-class Compiler implements ast.StmtVisitor<void>, ast.ExprVisitor<runtime.Value> {
-    instructions: bytecode.Instruction[]
-
-    constructor(public register_context: RegisterContext) {
-        this.instructions = []
-    }
-
-    compile_stmt(stmt: ast.Stmt) {
-        stmt.accept(this);
-    }
-
-    compile_expr(expr: ast.Expr): runtime.Value {
-        return expr.accept(this);
-    }
-
-    make_stmt_marker(stmt: ast.Stmt) {
-        this.instruction(new bytecode.StmtMarker(stmt.span));
-    }
-
-    visitExprStmt(stmt: ast.ExprStmt) {
-        this.make_stmt_marker(stmt);
-        this.compile_expr(stmt.expr);
-    }
-
-    visitPrintStmt(stmt: ast.PrintStmt) {
-        this.make_stmt_marker(stmt);
-        let e = this.compile_expr(stmt.expr);
-        this.instruction(new bytecode.Print(stmt.span, e));
-    }
-
-    visitVarStmt(stmt: ast.VarStmt) {
-        this.make_stmt_marker(stmt);
-        let e;
-        if (stmt.initializer) {
-            e = this.compile_expr(stmt.initializer);
-        } else {
-            e = new runtime.Nil();
-        }
-
-        this.instruction(new bytecode.MakeVar(stmt.span, stmt.name, e));
-    }
-
-    visitBlockStmt(stmt: ast.BlockStmt) {
-        this.make_stmt_marker(stmt);
-        this.instruction(new bytecode.StartScope(stmt.obrace_sp));
-        for (let sub_stmt of stmt.stmts) {
-            sub_stmt.accept(this);
-        }
-        this.instruction(new bytecode.EndScope(stmt.cbrace_sp));
-    }
-
-    visitFunctionStmt(stmt: ast.FunctionStmt) {
-        this.make_stmt_marker(stmt);
-        let register_context = new RegisterContext();
-        let fn_compiler = new Compiler(register_context);
-        fn_compiler.compile_stmt(stmt.body);
-
-        let fn = new runtime.Function(stmt.name, stmt.params, fn_compiler.instructions);
-        this.instruction(new bytecode.MakeVar(stmt.span, stmt.name, fn));
-    }
-
-    visitForStmt(stmt: ast.ForStmt) {
-        this.make_stmt_marker(stmt);
-        this.instruction(new bytecode.StartScope(stmt.for_sp));
-        if (stmt.initializer) {
-            this.compile_stmt(stmt.initializer);
-        }
-
-        let check_compiler = new Compiler(this.register_context);
-        let check;
-        if (stmt.compare) {
-            check = check_compiler.compile_expr(stmt.compare);
-        } else {
-            check = new runtime.Bool(true);
-        }
-
-        let body_compiler = new Compiler(this.register_context);
-        body_compiler.compile_stmt(stmt.body);
-
-        if (stmt.increment) {
-            body_compiler.compile_expr(stmt.increment);
-        }
-
-        this.instruction(new bytecode.While(stmt.span, check_compiler.instructions, check, body_compiler.instructions));
-        this.instruction(new bytecode.EndScope(stmt.for_sp)); // TODO: better span?
-    }
-
-    visitIfStmt(stmt: ast.IfStmt) {
-        this.make_stmt_marker(stmt);
-        let cond = this.compile_expr(stmt.condition);
-
-        let true_compiler = new Compiler(this.register_context);
-        true_compiler.compile_stmt(stmt.then_branch);
-
-        let false_compiler;
-        if (stmt.else_branch) {
-            false_compiler = new Compiler(this.register_context);
-            false_compiler.compile_stmt(stmt.else_branch);
-        } else {
-            false_compiler = null;
-        }
-
-        this.instruction(new bytecode.If(stmt.span, cond, true_compiler.instructions, false_compiler ? false_compiler.instructions : null));
-    }
-
-    visitReturnStmt(stmt: ast.ReturnStmt) {
-        this.make_stmt_marker(stmt);
-        let e;
-        if (stmt.value) {
-            e = this.compile_expr(stmt.value);
-        } else {
-            e = new runtime.Nil();
-        }
-
-        this.instruction(new bytecode.Return(stmt.span, e));
-    }
-
-    visitWhileStmt(stmt: ast.WhileStmt) {
-        this.make_stmt_marker(stmt);
-        let check_compiler = new Compiler(this.register_context);
-        let check = check_compiler.compile_expr(stmt.condition);
-
-        let body_compiler = new Compiler(this.register_context);
-        body_compiler.compile_stmt(stmt.body);
-
-        this.instruction(new bytecode.While(stmt.span, check_compiler.instructions, check, body_compiler.instructions));
-    }
-
-    visitBinaryExpr(expr: ast.BinaryExpr): runtime.Value {
-        let l = this.compile_expr(expr.left);
-        let r = this.compile_expr(expr.right);
-
-        let reg = this.register_context.new_register();
-
-        this.instruction(new bytecode.BinaryOp(expr.span, l, r, expr.op, reg));
-        return reg;
-    }
-
-    visitUnaryExpr(expr: ast.UnaryExpr): runtime.Value {
-        let v = this.compile_expr(expr.operand);
-        let reg = this.register_context.new_register();
-        this.instruction(new bytecode.UnaryOp(expr.span, v, expr.operator, reg));
-        return reg;
-    }
-
-    visitVarExpr(expr: ast.VarExpr): runtime.Value {
-        let reg = this.register_context.new_register();
-        this.instruction(new bytecode.ReadVar(expr.span, expr.name, reg));
-        return reg;
-    }
-
-    visitStringLiteral(expr: ast.StringLiteral): runtime.Value {
-        return new runtime.String(expr.value);
-    }
-
-    visitNumberLiteral(expr: ast.NumberLiteral): runtime.Value {
-        return new runtime.Number(expr.value);
-    }
-
-    visitBoolLiteral(expr: ast.BoolLiteral): runtime.Value {
-        return new runtime.Bool(expr.value);
-    }
-
-    visitNilLiteral(expr: ast.NilLiteral): runtime.Value {
-        return new runtime.Nil();
-    }
-
-    visitAssignExpr(expr: ast.AssignExpr): runtime.Value {
-        let v = this.compile_expr(expr.value);
-        this.instruction(new bytecode.Assign(expr.span, expr.name, v));
-        return v;
-    }
-
-    visitCallExpr(expr: ast.CallExpr): runtime.Value {
-        let callee = this.compile_expr(expr.callee);
-
-        let args = [];
-        for (let a_ast of expr.args) {
-            args.push(this.compile_expr(a_ast));
-        }
-
-        let reg = this.register_context.new_register();
-        this.instruction(new bytecode.Call(expr.span, callee, args, reg));
-        return reg;
-    }
-
-    visitLogicalExpr(expr: ast.LogicalExpr): runtime.Value {
-        throw new Error("not implemented yet"); // TODO
-    }
-
-    instruction(instr: bytecode.Instruction) {
-        this.instructions.push(instr);
-    }
+function make_stmt_marker(stmt: ast.Stmt) {
+    return new bytecode.StmtMarker(stmt.span);
 }
 
 export function compile(stmts: ast.Stmt[]): bytecode.Instruction[] {
     let register_context = new RegisterContext();
-    let compiler = new Compiler(register_context);
+    let instructions: bytecode.Instruction[] = []
 
     for (let stmt of stmts) {
-        compiler.compile_stmt(stmt);
+        compile_stmt(stmt, instructions, register_context);
     }
 
-    return compiler.instructions;
+    return instructions;
+}
+
+function compile_stmt(stmt: ast.Stmt, instructions: bytecode.Instruction[], register_context: RegisterContext) {
+    instructions.push(make_stmt_marker(stmt));
+
+    switch (stmt.type) {
+        case 'ExprStmt': {
+            compile_expr(stmt.expr, instructions, register_context);
+            break;
+        }
+
+        case 'PrintStmt': {
+            let e = compile_expr(stmt.expr, instructions, register_context);
+            instructions.push(new bytecode.Print(stmt.span, e));
+            break;
+        }
+
+        case 'VarStmt': {
+            let e;
+            if (stmt.initializer) {
+                e = compile_expr(stmt.initializer, instructions, register_context);
+            } else {
+                e = new runtime.Nil();
+            }
+
+            instructions.push(new bytecode.MakeVar(stmt.span, stmt.name, e));
+            break;
+        }
+
+        case 'BlockStmt': {
+            instructions.push(new bytecode.StartScope(stmt.obrace_sp));
+            for (let sub_stmt of stmt.stmts) {
+                compile_stmt(sub_stmt, instructions, register_context);
+            }
+            instructions.push(new bytecode.EndScope(stmt.cbrace_sp));
+            break;
+        }
+
+        case 'FunctionStmt': {
+            let register_context = new RegisterContext();
+            let instrs: bytecode.Instruction[] = [];
+            compile_stmt(stmt.body, instrs, register_context);
+
+            let fn = new runtime.Function(stmt.name, stmt.params, instructions);
+            instructions.push(new bytecode.MakeVar(stmt.span, stmt.name, fn));
+            break;
+        }
+
+        case 'ForStmt': {
+            instructions.push(new bytecode.StartScope(stmt.for_sp));
+            if (stmt.initializer) {
+                compile_stmt(stmt.initializer, instructions, register_context);
+            }
+
+            let check_code: bytecode.Instruction[] = [];
+            let check;
+            if (stmt.compare) {
+                check = compile_expr(stmt.compare, check_code, register_context);
+            } else {
+                check = new runtime.Bool(true);
+            }
+
+            let body_code: bytecode.Instruction[] = [];
+            compile_stmt(stmt.body, body_code, register_context);
+
+            if (stmt.increment) {
+                compile_expr(stmt.increment, body_code, register_context);
+            }
+
+            instructions.push(new bytecode.While(stmt.span, check_code, check, body_code));
+            instructions.push(new bytecode.EndScope(stmt.for_sp)); // TODO: better span?
+            break;
+        }
+
+        case 'IfStmt': {
+            let cond = compile_expr(stmt.condition, instructions, register_context);
+
+            let true_code: bytecode.Instruction[] = [];
+            compile_stmt(stmt.then_branch, true_code, register_context);
+
+            let false_code: bytecode.Instruction[] | null;
+            if (stmt.else_branch) {
+                false_code = [];
+                compile_stmt(stmt.else_branch, false_code, register_context);
+            } else {
+                false_code = null;
+            }
+
+            instructions.push(new bytecode.If(stmt.span, cond, true_code, false_code));
+            break;
+        }
+
+        case 'ReturnStmt': {
+            let e;
+            if (stmt.value) {
+                e = compile_expr(stmt.value, instructions, register_context);
+            } else {
+                e = new runtime.Nil();
+            }
+
+            instructions.push(new bytecode.Return(stmt.span, e));
+            break;
+        }
+
+        case 'WhileStmt': {
+            let check_code: bytecode.Instruction[] = [];
+            let check = compile_expr(stmt.condition, check_code, register_context);
+
+            let body_code: bytecode.Instruction[] = [];
+            compile_stmt(stmt.body, body_code, register_context);
+
+            instructions.push(new bytecode.While(stmt.span, check_code, check, body_code));
+            break;
+        }
+
+    }
+}
+
+function compile_expr(expr: ast.Expr, instructions: bytecode.Instruction[], register_context: RegisterContext): runtime.Value {
+    switch (expr.type) {
+        case 'BinaryExpr': {
+            let l = compile_expr(expr.left, instructions, register_context);
+            let r = compile_expr(expr.right, instructions, register_context);
+
+            let reg = register_context.new_register();
+
+            instructions.push(new bytecode.BinaryOp(expr.span, l, r, expr.op, reg));
+            return reg;
+        }
+
+        case 'UnaryExpr': {
+            let v = compile_expr(expr.operand, instructions, register_context);
+            let reg = register_context.new_register();
+            instructions.push(new bytecode.UnaryOp(expr.span, v, expr.operator, reg));
+            return reg;
+        }
+
+        case 'VarExpr': {
+            let reg = register_context.new_register();
+            instructions.push(new bytecode.ReadVar(expr.span, expr.name, reg));
+            return reg;
+        }
+
+        case 'StringLiteral': {
+            return new runtime.String(expr.value);
+        }
+
+        case 'NumberLiteral': {
+            return new runtime.Number(expr.value);
+        }
+
+        case 'BoolLiteral': {
+            return new runtime.Bool(expr.value);
+        }
+
+        case 'NilLiteral': {
+            return new runtime.Nil();
+        }
+
+        case 'AssignExpr': {
+            let v = compile_expr(expr.value, instructions, register_context);
+            instructions.push(new bytecode.Assign(expr.span, expr.name, v));
+            return v;
+        }
+
+        case 'CallExpr': {
+            let callee = compile_expr(expr.callee, instructions, register_context);
+
+            let args = [];
+            for (let a_ast of expr.args) {
+                args.push(compile_expr(a_ast, instructions, register_context));
+            }
+
+            let reg = register_context.new_register();
+            instructions.push(new bytecode.Call(expr.span, callee, args, reg));
+            return reg;
+        }
+
+        case 'LogicalExpr': {
+            throw new Error("not implemented yet"); // TODO
+        }
+    }
 }

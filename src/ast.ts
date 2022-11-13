@@ -1,29 +1,11 @@
 import * as lexer from './lexer';
 import * as diagnostics from './diagnostics';
 
-export interface AST extends diagnostics.Located {}
+export type Expr = BinaryExpr | UnaryExpr | VarExpr | StringLiteral | NumberLiteral | BoolLiteral | NilLiteral | AssignExpr | CallExpr | LogicalExpr;
+    // | GetExpr | SetExpr | ThisExpr | SuperExpr
 
-export interface ExprVisitor<T> {
-    visitBinaryExpr(ast: BinaryExpr): T;
-    visitUnaryExpr(ast: UnaryExpr): T;
-    visitVarExpr(ast: VarExpr): T;
-    visitStringLiteral(ast: StringLiteral): T;
-    visitNumberLiteral(ast: NumberLiteral): T;
-    visitBoolLiteral(ast: BoolLiteral): T;
-    visitNilLiteral(ast: NilLiteral): T;
-    visitAssignExpr(ast: AssignExpr): T;
-    visitCallExpr(ast: CallExpr): T;
-    visitLogicalExpr(ast: LogicalExpr): T;
-
-    // visitGetExpr(ast: GetExpr): T;
-    // visitSetExpr(ast: SetExpr): T;
-    // visitThisExpr(ast: ThisExpr): T;
-    // visitSuperExpr(ast: SuperExpr): T;
-}
-
-export interface Expr extends AST {
-    accept<T>(visitor: ExprVisitor<T>): T;
-}
+export type Stmt = WhileStmt | ReturnStmt | IfStmt | ForStmt | FunctionStmt | BlockStmt | VarStmt | PrintStmt | ExprStmt;
+    // | ClassStmt
 
 export enum BinaryOperator {
     Plus, Minus, Star, Slash,
@@ -42,117 +24,117 @@ export enum LogicalOperator {
     Or,
 }
 
-export class BinaryExpr implements Expr {
-    constructor(public span: diagnostics.Span, public left: Expr, public right: Expr, public op: BinaryOperator) {}
-    accept<T>(visitor: ExprVisitor<T>) { return visitor.visitBinaryExpr(this); }
+export interface BinaryExpr extends diagnostics.Located {
+    type: 'BinaryExpr';
+    left: Expr;
+    right: Expr;
+    op: BinaryOperator;
 }
-export class UnaryExpr implements Expr {
-    constructor(public span: diagnostics.Span, public operator: UnaryOperator, public operand: Expr) {}
-    accept<T>(visitor: ExprVisitor<T>) { return visitor.visitUnaryExpr(this); }
+export interface UnaryExpr extends diagnostics.Located {
+    type: 'UnaryExpr';
+    operator: UnaryOperator;
+    operand: Expr;
 }
-export class VarExpr implements Expr {
-    constructor(public span: diagnostics.Span, public name: string) {}
-    accept<T>(visitor: ExprVisitor<T>) { return visitor.visitVarExpr(this); }
+export interface VarExpr extends diagnostics.Located {
+    type: 'VarExpr';
+    name: string;
 }
-export class StringLiteral implements Expr {
-    constructor(public span: diagnostics.Span, public value: string) {}
-    accept<T>(visitor: ExprVisitor<T>) { return visitor.visitStringLiteral(this); }
+export interface StringLiteral extends diagnostics.Located {
+    type: 'StringLiteral';
+    value: string;
 }
-export class NumberLiteral implements Expr {
-    constructor(public span: diagnostics.Span, public value: number) {}
-    accept<T>(visitor: ExprVisitor<T>) { return visitor.visitNumberLiteral(this); }
+export interface NumberLiteral extends diagnostics.Located {
+    type: 'NumberLiteral';
+    value: number;
 }
-export class BoolLiteral implements Expr {
-    constructor(public span: diagnostics.Span, public value: boolean) {}
-    accept<T>(visitor: ExprVisitor<T>) { return visitor.visitBoolLiteral(this); }
+export interface BoolLiteral extends diagnostics.Located {
+    type: 'BoolLiteral';
+    value: boolean;
 }
-export class NilLiteral implements Expr {
-    constructor(public span: diagnostics.Span, ) {}
-    accept<T>(visitor: ExprVisitor<T>) { return visitor.visitNilLiteral(this); }
+export interface NilLiteral extends diagnostics.Located {
+    type: 'NilLiteral';
 }
-export class AssignExpr implements Expr {
-    constructor(public span: diagnostics.Span, public name: string, public value: Expr) {}
-    accept<T>(visitor: ExprVisitor<T>) { return visitor.visitAssignExpr(this); }
+export interface AssignExpr extends diagnostics.Located {
+    type: 'AssignExpr';
+    name: string;
+    value: Expr;
 }
-export class CallExpr implements Expr {
-    constructor(public span: diagnostics.Span, public callee: Expr, public args: Expr[]) {}
-    accept<T>(visitor: ExprVisitor<T>) { return visitor.visitCallExpr(this); }
+export interface CallExpr extends diagnostics.Located {
+    type: 'CallExpr';
+    callee: Expr;
+    args: Expr[];
 }
-// export class GetExpr implements Expr {
-    // constructor(public span: diagnostics.Span, public object: Expr, public name: string) {}
-    // accept<T>(visitor: ExprVisitor<T>) { return visitor.visitGetExpr(this); }
+// interface GetExpr extends diagnostics.Located {
+//     object: Expr;
+//     name: string;
 // }
-export class LogicalExpr implements Expr {
-    constructor(public span: diagnostics.Span, public left: Expr, public operator: LogicalOperator, public right: Expr) {}
-    accept<T>(visitor: ExprVisitor<T>) { return visitor.visitLogicalExpr(this); }
+export interface LogicalExpr extends diagnostics.Located {
+    type: 'LogicalExpr';
+    left: Expr;
+    operator: LogicalOperator;
+    right: Expr;
 }
-// export class SetExpr implements Expr {
-    // constructor(public span: diagnostics.Span, public object: Expr, public name: string, public value: Expr) {}
-    // accept<T>(visitor: ExprVisitor<T>) { return visitor.visitSetExpr(this); }
+// interface SetExpr extends diagnostics.Located {
+// object: Expr
+// name: string;
+// value: Expr;
 // }
-// export class ThisExpr implements Expr {
-    // constructor(public span: diagnostics.Span, public keyword: lexer.This) {}
-    // accept<T>(visitor: ExprVisitor<T>) { return visitor.visitThisExpr(this); }
+// interface ThisExpr extends diagnostics.Located {
+// keyword: lexer.This
 // }
 
-// export class SuperExpr implements Expr {
-// constructor(public span: diagnostics.Span, keyword: Token, method: ) {}
-// accept<T>(visitor: ExprVisitor<T>) { return visitor.visitSuperExpr(this); }
+// interface SuperExpr extends diagnostics.Located {
+// keyword: Token, method:
 // }
 
-export interface StmtVisitor<T> {
-    visitExprStmt(ast: ExprStmt): T;
-    visitPrintStmt(ast: PrintStmt): T;
-    visitVarStmt(ast: VarStmt): T;
-    visitBlockStmt(ast: BlockStmt): T;
-    // visitClassStmt(ast: ClassStmt): T;
-    visitFunctionStmt(ast: FunctionStmt): T;
-    visitForStmt(ast: ForStmt): T;
-    visitIfStmt(ast: IfStmt): T;
-    visitReturnStmt(ast: ReturnStmt): T;
-    visitWhileStmt(ast: WhileStmt): T;
+export interface ExprStmt extends diagnostics.Located {
+    type: 'ExprStmt';
+    expr: Expr;
 }
-export interface Stmt extends AST {
-    accept<T>(visitor: StmtVisitor<T>): T;
+export interface PrintStmt extends diagnostics.Located {
+    type: 'PrintStmt';
+    expr: Expr;
 }
-
-export class ExprStmt implements Stmt {
-    constructor(public span: diagnostics.Span, public expr: Expr) {}
-    accept<T>(visitor: StmtVisitor<T>) { return visitor.visitExprStmt(this); }
+export interface VarStmt extends diagnostics.Located {
+    type: 'VarStmt';
+    name: string;
+    initializer: Expr | null;
 }
-export class PrintStmt implements Stmt {
-    constructor(public span: diagnostics.Span, public expr: Expr) {}
-    accept<T>(visitor: StmtVisitor<T>) { return visitor.visitPrintStmt(this); }
+export interface BlockStmt extends diagnostics.Located {
+    type: 'BlockStmt';
+    stmts: Stmt[];
+    readonly obrace_sp: diagnostics.Span;
+    readonly cbrace_sp: diagnostics.Span;
 }
-export class VarStmt implements Stmt {
-    constructor(public span: diagnostics.Span, public name: string, public initializer: Expr | null) {}
-    accept<T>(visitor: StmtVisitor<T>) { return visitor.visitVarStmt(this); }
-}
-export class BlockStmt implements Stmt {
-    constructor(public span: diagnostics.Span, public stmts: Stmt[], public readonly obrace_sp: diagnostics.Span, public readonly cbrace_sp: diagnostics.Span) {}
-    accept<T>(visitor: StmtVisitor<T>) { return visitor.visitBlockStmt(this); }
-}
-// export class ClassStmt implements Stmt {
-// constructor(public span: diagnostics.Span, name: string, List<Stmt.Function> methods) {}
-// accept<T>(visitor: StmtVisitor<T>) { return visitor.visitClassStmt(this); }
+// interface ClassStmt extends diagnostics.Located {
+// name: string, List<Stmt.Function> methods
 // }
-export class FunctionStmt implements Stmt {
-    constructor(public span: diagnostics.Span, public name: string, public params: string[], public body: BlockStmt) {}
-    accept<T>(visitor: StmtVisitor<T>) { return visitor.visitFunctionStmt(this); }
+export interface FunctionStmt extends diagnostics.Located {
+    type: 'FunctionStmt';
+    name: string;
+    params: string[];
+    body: BlockStmt;
 }
-export class ForStmt implements Stmt {
-    constructor(public span: diagnostics.Span, public initializer: Stmt | null, public compare: Expr | null, public increment: Expr | null, public body: Stmt, public readonly for_sp: diagnostics.Span) {}
-    accept<T>(visitor: StmtVisitor<T>) { return visitor.visitForStmt(this); }
+export interface ForStmt extends diagnostics.Located {
+    type: 'ForStmt';
+    initializer: Stmt | null;
+    compare: Expr | null;
+    increment: Expr | null;
+    body: Stmt;
+    for_sp: diagnostics.Span;
 }
-export class IfStmt implements Stmt {
-    constructor(public span: diagnostics.Span, public condition: Expr, public then_branch: Stmt, public else_branch: Stmt | null) {}
-    accept<T>(visitor: StmtVisitor<T>) { return visitor.visitIfStmt(this); }
+export interface IfStmt extends diagnostics.Located {
+    type: 'IfStmt';
+    condition: Expr;
+    then_branch: Stmt;
+    else_branch: Stmt | null;
 }
-export class ReturnStmt implements Stmt {
-    constructor(public span: diagnostics.Span, public value: Expr | null) {}
-    accept<T>(visitor: StmtVisitor<T>) { return visitor.visitReturnStmt(this); }
+export interface ReturnStmt extends diagnostics.Located {
+    type: 'ReturnStmt';
+    value: Expr | null;
 }
-export class WhileStmt implements Stmt {
-    constructor(public span: diagnostics.Span, public condition: Expr, public body: Stmt) {}
-    accept<T>(visitor: StmtVisitor<T>) { return visitor.visitWhileStmt(this); }
+export interface WhileStmt extends diagnostics.Located {
+    type: 'WhileStmt';
+    condition: Expr;
+    body: Stmt;
 }
