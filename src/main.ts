@@ -19,10 +19,6 @@ document.getElementById('submitbutton')!.addEventListener('click', function() {
     let lexed = lexer.lex(input);
     let parsed = parser.parse(lexed);
     if (parsed) {
-        let compiled = compiler.compile(parsed);
-        vm.interpret(compiled);
-        let pp = bytecode.pretty_print(compiled);
-        document.getElementById('compiledcodeview')!.textContent = pp;
-        console.log(pp);
+        vm.interpret(compiler.compile(parsed));
     }
 });

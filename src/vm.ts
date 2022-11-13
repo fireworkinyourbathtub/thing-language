@@ -1,6 +1,7 @@
 import * as bytecode from './bytecode';
 import * as runtime from './runtime';
 import * as ast from './ast';
+import * as visualization from './visualization';
 
 function* instruction_list(registers: runtime.RuntimeValue[], instructions: bytecode.Instruction[]): IterableIterator<bytecode.Instruction> {
     for (let instr of instructions) {
@@ -29,6 +30,8 @@ function* instruction_list_1(registers: runtime.RuntimeValue[], instr: bytecode.
             break;
         }
 
+        case 'StmtMarker': break;
+
         default: {
             yield instr;
             break;
@@ -36,15 +39,19 @@ function* instruction_list_1(registers: runtime.RuntimeValue[], instr: bytecode.
     }
 }
 
-export function interpret(instructions: bytecode.Instruction[]) {
+export async function interpret(instructions: bytecode.Instruction[]) {
     let globals = new runtime.Environment(null);
     interpret_(globals, globals, instructions);
 }
 
-export function interpret_(globals: runtime.Environment, env: runtime.Environment, instructions: bytecode.Instruction[]): runtime.RuntimeValue {
+export async function interpret_(globals: runtime.Environment, env: runtime.Environment, instructions: bytecode.Instruction[]): Promise<runtime.RuntimeValue> {
+    let tracker = new visualization.CallStackFrame(instructions);
     let registers: runtime.RuntimeValue[] = [];
 
     for (let instr of instruction_list(registers, instructions)) {
+        tracker.focus_instr(instr);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
         switch (instr.type) {
             case 'StmtMarker': break;
 
@@ -178,7 +185,7 @@ export function interpret_(globals: runtime.Environment, env: runtime.Environmen
                 if (args.length != callee_.arity)
                     throw new Error(`wrong number of arguments: expected ${callee_.arity}, got ${args.length}`);
                 else
-                    registers[instr.dest.index] = callee_.call(globals, args);
+                    registers[instr.dest.index] = await callee_.call(globals, args);
 
                 break;
             }
@@ -206,6 +213,7 @@ export function interpret_(globals: runtime.Environment, env: runtime.Environmen
             }
 
             case 'Return': {
+                tracker.done();
                 return instr.value.resolve(registers);
             }
 
@@ -219,5 +227,6 @@ export function interpret_(globals: runtime.Environment, env: runtime.Environmen
         }
     }
 
+    tracker.done();
     return new runtime.Nil();
 }

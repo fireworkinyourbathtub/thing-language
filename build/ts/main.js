@@ -24,7 +24,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const diagnostics = __importStar(require("./diagnostics"));
-const bytecode = __importStar(require("./bytecode"));
 const lexer = __importStar(require("./lexer"));
 const parser = __importStar(require("./parser"));
 const compiler = __importStar(require("./compiler"));
@@ -38,10 +37,6 @@ document.getElementById('submitbutton').addEventListener('click', function () {
     let lexed = lexer.lex(input);
     let parsed = parser.parse(lexed);
     if (parsed) {
-        let compiled = compiler.compile(parsed);
-        vm.interpret(compiled);
-        let pp = bytecode.pretty_print(compiled);
-        document.getElementById('compiledcodeview').textContent = pp;
-        console.log(pp);
+        vm.interpret(compiler.compile(parsed));
     }
 });

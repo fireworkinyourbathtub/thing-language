@@ -22,6 +22,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Bool = exports.Number = exports.String = exports.Function = exports.Nil = exports.Register = exports.Environment = void 0;
 const vm = __importStar(require("./vm"));
@@ -77,17 +86,19 @@ class Function {
         this.instructions = instructions;
         this.arity = this.params.length;
     }
-    pretty_print() { return this.stringify(); }
+    pretty_print() { return `<function>`; }
     resolve() { return this; }
     is_truthy() { return true; }
     type() { return 'function'; }
     stringify() { return `<function '${this.name}'>`; }
     call(globals, args) {
-        let env = new Environment(globals);
-        for (let i = 0; i < this.params.length; ++i) { // should be same size
-            env.put_variable(this.params[i], args[i]);
-        }
-        return vm.interpret_(globals, env, this.instructions);
+        return __awaiter(this, void 0, void 0, function* () {
+            let env = new Environment(globals);
+            for (let i = 0; i < this.params.length; ++i) { // should be same size
+                env.put_variable(this.params[i], args[i]);
+            }
+            return yield vm.interpret_(globals, env, this.instructions);
+        });
     }
 }
 exports.Function = Function;

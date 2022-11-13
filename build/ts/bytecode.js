@@ -29,20 +29,25 @@ const ast = __importStar(require("./ast"));
 function pretty_print(instrs) {
     let indentation = 0;
     let result = '';
+    let cur_number = 0;
+    let mapping = new Map();
     function blank_line() {
         result += '\n';
     }
-    function append(s, sp) {
+    function append(instr, s, sp) {
         let sp_contents = sp.contents;
         let sp_annotation = sp_contents.split('\n').length > 1 ? `${sp_contents.split('\n')[0]}...` : sp_contents;
-        append_no_span(`${s}${' '.repeat(40 - s.length)}// ${sp_annotation}`);
+        append_no_span(instr, `${s}${' '.repeat(40 - s.length)}// ${sp_annotation}`);
     }
-    function append_no_span(s) {
-        result += `${' '.repeat(indentation * 4)}${s}\n`;
+    function append_no_span(instr, s) {
+        let append = `${' '.repeat(indentation * 4)}${s}\n`;
+        if (instr != undefined)
+            mapping.set(instr, [result.length, result.length + append.length]);
+        result += append;
     }
-    function append_marker(s) {
+    function append_marker(instr, s) {
         blank_line();
-        append_no_span(s);
+        append_no_span(instr, s);
     }
     function pp_instrs(instrs) {
         for (let instr of instrs) {
@@ -52,66 +57,66 @@ function pretty_print(instrs) {
     function pp_instr(instr) {
         switch (instr.type) {
             case 'Print': {
-                append(`print ${instr.value.pretty_print()};`, instr.span);
+                append(instr, `print ${instr.value.pretty_print()};`, instr.span);
                 break;
             }
             case 'MakeVar': {
-                append(`make_var ${instr.name} = ${instr.value.pretty_print()};`, instr.span);
+                append(instr, `make_var ${instr.name} = ${instr.value.pretty_print()};`, instr.span);
                 break;
             }
             case 'While': {
-                append('while {', instr.span);
+                append(instr, 'while {', instr.span);
                 indent();
                 pp_instrs(instr.check_code);
-                append_no_span(`check ${instr.check.pretty_print()}`);
+                append_no_span(undefined, `check ${instr.check.pretty_print()}`);
                 dedent();
-                append_no_span('}');
-                append_no_span('{');
+                append_no_span(undefined, '}');
+                append_no_span(undefined, '{');
                 indent();
                 pp_instrs(instr.body_code);
                 dedent();
-                append_no_span('}');
+                append_no_span(undefined, '}');
                 break;
             }
             case 'If': {
-                append('if ${instr.cond.pretty_print()} {', instr.span);
+                append(instr, `if ${instr.cond.pretty_print()} {`, instr.span);
                 indent();
                 pp_instrs(instr.true_branch);
                 dedent();
                 if (instr.false_branch) {
-                    append_no_span('} else {');
+                    append_no_span(instr, '} else {');
                     indent();
                     pp_instrs(instr.false_branch);
                     dedent();
-                    append_no_span('}');
+                    append_no_span(instr, '}');
                 }
                 else {
-                    append_no_span('}');
+                    append_no_span(instr, '}');
                 }
                 break;
             }
             case 'Return': {
-                append(`return ${instr.value.pretty_print()};`, instr.span);
+                append(instr, `return ${instr.value.pretty_print()};`, instr.span);
                 break;
             }
             case 'StartScope': {
-                append(`start_scope;`, instr.span);
+                append(instr, `start_scope;`, instr.span);
                 break;
             }
             case 'EndScope': {
-                append(`end_scope;`, instr.span);
+                append(instr, `end_scope;`, instr.span);
                 break;
             }
             case 'ReadVar': {
-                append(`read_var ${instr.name} -> ${instr.dest.pretty_print()};`, instr.span);
+                append(instr, `read_var ${instr.name} -> ${instr.dest.pretty_print()};`, instr.span);
                 break;
             }
             case 'Assign': {
-                append(`assign ${instr.name} = ${instr.value.pretty_print()};`, instr.span);
+                append(instr, `assign ${instr.name} = ${instr.value.pretty_print()};`, instr.span);
                 break;
             }
             case 'Call': {
-                append(`call ${instr.callee.pretty_print()}(${instr.args.map(a => a.pretty_print()).join()}) -> ${instr.dest.pretty_print()};`, instr.span);
+                append(instr, `call ${instr.callee.pretty_print()}(${instr.args.map(a => a.pretty_print()).join()}) -> ${instr.dest.pretty_print()};`, instr.span);
                 break;
             }
             case 'BinaryOp': {
@@ -148,7 +153,7 @@ function pretty_print(instrs) {
                         op_name = 'cmp!=';
                         break;
                 }
-                append(`${op_name} ${instr.l.pretty_print()} ${instr.r.pretty_print()} -> ${instr.dest.pretty_print()};`, instr.span);
+                append(instr, `${op_name} ${instr.l.pretty_print()} ${instr.r.pretty_print()} -> ${instr.dest.pretty_print()};`, instr.span);
                 break;
             }
             case 'UnaryOp': {
@@ -161,11 +166,11 @@ function pretty_print(instrs) {
                         op_name = 'logic_neg';
                         break;
                 }
-                append(`${op_name} ${instr.v.pretty_print()} -> ${instr.dest.pretty_print()};`, instr.span);
+                append(instr, `${op_name} ${instr.v.pretty_print()} -> ${instr.dest.pretty_print()};`, instr.span);
                 break;
             }
             case 'StmtMarker': {
-                append_marker(`// line ${instr.span.start_line}: ${diagnostics.get_line(instr.span.source, instr.span.start_line)}`);
+                append_marker(instr, `// line ${instr.span.start_line}: ${diagnostics.get_line(instr.span.source, instr.span.start_line)}`);
                 break;
             }
         }
@@ -177,6 +182,6 @@ function pretty_print(instrs) {
         --indentation;
     }
     pp_instrs(instrs);
-    return result;
+    return [result, mapping];
 }
 exports.pretty_print = pretty_print;

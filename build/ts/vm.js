@@ -22,10 +22,20 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.interpret_ = exports.interpret = void 0;
 const runtime = __importStar(require("./runtime"));
 const ast = __importStar(require("./ast"));
+const visualization = __importStar(require("./visualization"));
 function* instruction_list(registers, instructions) {
     for (let instr of instructions) {
         yield* instruction_list_1(registers, instr);
@@ -53,6 +63,7 @@ function* instruction_list_1(registers, instr) {
             }
             break;
         }
+        case 'StmtMarker': break;
         default: {
             yield instr;
             break;
@@ -60,184 +71,193 @@ function* instruction_list_1(registers, instr) {
     }
 }
 function interpret(instructions) {
-    let globals = new runtime.Environment(null);
-    interpret_(globals, globals, instructions);
+    return __awaiter(this, void 0, void 0, function* () {
+        let globals = new runtime.Environment(null);
+        interpret_(globals, globals, instructions);
+    });
 }
 exports.interpret = interpret;
 function interpret_(globals, env, instructions) {
-    let registers = [];
-    for (let instr of instruction_list(registers, instructions)) {
-        switch (instr.type) {
-            case 'StmtMarker': break;
-            case 'UnaryOp': {
-                let value = instr.v.resolve(registers);
-                let result;
-                switch (instr.op) {
-                    case ast.UnaryOperator.Minus:
-                        if (value instanceof runtime.Number) {
-                            result = new runtime.Number(-value.x);
-                        }
-                        else {
-                            throw new Error(`cannot negate non-number ${value.type()}`); // TODO
-                        }
-                        break;
-                    case ast.UnaryOperator.Bang:
-                        result = new runtime.Bool(!value.is_truthy());
-                        break;
+    return __awaiter(this, void 0, void 0, function* () {
+        let tracker = new visualization.CallStackFrame(instructions);
+        let registers = [];
+        for (let instr of instruction_list(registers, instructions)) {
+            tracker.focus_instr(instr);
+            yield new Promise((resolve) => setTimeout(resolve, 1000));
+            switch (instr.type) {
+                case 'StmtMarker': break;
+                case 'UnaryOp': {
+                    let value = instr.v.resolve(registers);
+                    let result;
+                    switch (instr.op) {
+                        case ast.UnaryOperator.Minus:
+                            if (value instanceof runtime.Number) {
+                                result = new runtime.Number(-value.x);
+                            }
+                            else {
+                                throw new Error(`cannot negate non-number ${value.type()}`); // TODO
+                            }
+                            break;
+                        case ast.UnaryOperator.Bang:
+                            result = new runtime.Bool(!value.is_truthy());
+                            break;
+                    }
+                    registers[instr.dest.index] = result;
+                    break;
                 }
-                registers[instr.dest.index] = result;
-                break;
-            }
-            case 'BinaryOp': {
-                let l = instr.l.resolve(registers);
-                let r = instr.r.resolve(registers);
-                let result;
-                let cannot_compare = new Error(`cannot compare ${l.type()} and ${r.type()}; can only compare number and number`);
-                switch (instr.op) {
-                    case ast.BinaryOperator.Plus: {
-                        if (l instanceof runtime.Number && r instanceof runtime.Number) {
-                            result = new runtime.Number(l.x + r.x);
+                case 'BinaryOp': {
+                    let l = instr.l.resolve(registers);
+                    let r = instr.r.resolve(registers);
+                    let result;
+                    let cannot_compare = new Error(`cannot compare ${l.type()} and ${r.type()}; can only compare number and number`);
+                    switch (instr.op) {
+                        case ast.BinaryOperator.Plus: {
+                            if (l instanceof runtime.Number && r instanceof runtime.Number) {
+                                result = new runtime.Number(l.x + r.x);
+                            }
+                            else if (l instanceof runtime.String && r instanceof runtime.String) {
+                                result = new runtime.String(l.x + r.x);
+                            }
+                            else {
+                                throw new Error(`cannot add ${l.type()} and ${r.type()}; can only add number and number or string and string`);
+                            }
+                            break;
                         }
-                        else if (l instanceof runtime.String && r instanceof runtime.String) {
-                            result = new runtime.String(l.x + r.x);
+                        case ast.BinaryOperator.Minus: {
+                            if (l instanceof runtime.Number && r instanceof runtime.Number) {
+                                result = new runtime.Number(l.x - r.x);
+                            }
+                            else {
+                                throw new Error(`cannot subtract ${l.type()} and ${r.type()}; can only subtract number and number`);
+                            }
+                            break;
                         }
-                        else {
-                            throw new Error(`cannot add ${l.type()} and ${r.type()}; can only add number and number or string and string`);
+                        case ast.BinaryOperator.Star: {
+                            if (l instanceof runtime.Number && r instanceof runtime.Number) {
+                                result = new runtime.Number(l.x * r.x);
+                            }
+                            else {
+                                throw new Error(`cannot multiply ${l.type()} and ${r.type()}; can only multiply number and number`);
+                            }
+                            break;
                         }
-                        break;
+                        case ast.BinaryOperator.Slash: {
+                            if (l instanceof runtime.Number && r instanceof runtime.Number) {
+                                result = new runtime.Number(l.x / r.x);
+                            }
+                            else {
+                                throw new Error(`cannot divide ${l.type()} and ${r.type()}; can only divide number and number`);
+                            }
+                            break;
+                        }
+                        case ast.BinaryOperator.Less: {
+                            if (l instanceof runtime.Number && r instanceof runtime.Number) {
+                                result = new runtime.Bool(l.x < r.x);
+                            }
+                            else {
+                                throw cannot_compare;
+                            }
+                            break;
+                        }
+                        case ast.BinaryOperator.Greater: {
+                            if (l instanceof runtime.Number && r instanceof runtime.Number) {
+                                result = new runtime.Bool(l.x > r.x);
+                            }
+                            else {
+                                throw cannot_compare;
+                            }
+                            break;
+                        }
+                        case ast.BinaryOperator.LessEqual: {
+                            if (l instanceof runtime.Number && r instanceof runtime.Number) {
+                                result = new runtime.Bool(l.x <= r.x);
+                            }
+                            else {
+                                throw cannot_compare;
+                            }
+                            break;
+                        }
+                        case ast.BinaryOperator.GreaterEqual: {
+                            if (l instanceof runtime.Number && r instanceof runtime.Number) {
+                                result = new runtime.Bool(l.x >= r.x);
+                            }
+                            else {
+                                throw cannot_compare;
+                            }
+                            break;
+                        }
+                        case ast.BinaryOperator.EqualEqual: {
+                            if (l instanceof runtime.Nil && r instanceof runtime.Nil) {
+                                result = new runtime.Bool(true);
+                            }
+                            else if (l instanceof runtime.Number && r instanceof runtime.Number) {
+                                result = new runtime.Bool(l.x == r.x);
+                            }
+                            else if (l instanceof runtime.String && r instanceof runtime.String) {
+                                result = new runtime.Bool(l.x == r.x);
+                            }
+                            else if (l instanceof runtime.Bool && r instanceof runtime.Bool) {
+                                result = new runtime.Bool(l.x == r.x);
+                            }
+                            else if (l instanceof runtime.Function && r instanceof runtime.Function) {
+                                result = new runtime.Bool(false);
+                            }
+                            break;
+                        }
+                        case ast.BinaryOperator.BangEqual: {
+                            result = new runtime.Bool(l != r);
+                            break;
+                        }
                     }
-                    case ast.BinaryOperator.Minus: {
-                        if (l instanceof runtime.Number && r instanceof runtime.Number) {
-                            result = new runtime.Number(l.x - r.x);
-                        }
-                        else {
-                            throw new Error(`cannot subtract ${l.type()} and ${r.type()}; can only subtract number and number`);
-                        }
-                        break;
-                    }
-                    case ast.BinaryOperator.Star: {
-                        if (l instanceof runtime.Number && r instanceof runtime.Number) {
-                            result = new runtime.Number(l.x * r.x);
-                        }
-                        else {
-                            throw new Error(`cannot multiply ${l.type()} and ${r.type()}; can only multiply number and number`);
-                        }
-                        break;
-                    }
-                    case ast.BinaryOperator.Slash: {
-                        if (l instanceof runtime.Number && r instanceof runtime.Number) {
-                            result = new runtime.Number(l.x / r.x);
-                        }
-                        else {
-                            throw new Error(`cannot divide ${l.type()} and ${r.type()}; can only divide number and number`);
-                        }
-                        break;
-                    }
-                    case ast.BinaryOperator.Less: {
-                        if (l instanceof runtime.Number && r instanceof runtime.Number) {
-                            result = new runtime.Bool(l.x < r.x);
-                        }
-                        else {
-                            throw cannot_compare;
-                        }
-                        break;
-                    }
-                    case ast.BinaryOperator.Greater: {
-                        if (l instanceof runtime.Number && r instanceof runtime.Number) {
-                            result = new runtime.Bool(l.x > r.x);
-                        }
-                        else {
-                            throw cannot_compare;
-                        }
-                        break;
-                    }
-                    case ast.BinaryOperator.LessEqual: {
-                        if (l instanceof runtime.Number && r instanceof runtime.Number) {
-                            result = new runtime.Bool(l.x <= r.x);
-                        }
-                        else {
-                            throw cannot_compare;
-                        }
-                        break;
-                    }
-                    case ast.BinaryOperator.GreaterEqual: {
-                        if (l instanceof runtime.Number && r instanceof runtime.Number) {
-                            result = new runtime.Bool(l.x >= r.x);
-                        }
-                        else {
-                            throw cannot_compare;
-                        }
-                        break;
-                    }
-                    case ast.BinaryOperator.EqualEqual: {
-                        if (l instanceof runtime.Nil && r instanceof runtime.Nil) {
-                            result = new runtime.Bool(true);
-                        }
-                        else if (l instanceof runtime.Number && r instanceof runtime.Number) {
-                            result = new runtime.Bool(l.x == r.x);
-                        }
-                        else if (l instanceof runtime.String && r instanceof runtime.String) {
-                            result = new runtime.Bool(l.x == r.x);
-                        }
-                        else if (l instanceof runtime.Bool && r instanceof runtime.Bool) {
-                            result = new runtime.Bool(l.x == r.x);
-                        }
-                        else if (l instanceof runtime.Function && r instanceof runtime.Function) {
-                            result = new runtime.Bool(false);
-                        }
-                        break;
-                    }
-                    case ast.BinaryOperator.BangEqual: {
-                        result = new runtime.Bool(l != r);
-                        break;
-                    }
+                    registers[instr.dest.index] = result; // TODO: remove !
+                    break;
                 }
-                registers[instr.dest.index] = result; // TODO: remove !
-                break;
+                case 'Call': {
+                    let callee = instr.callee.resolve(registers);
+                    let args = instr.args.map(x => x.resolve(registers));
+                    if (!('call' in callee && 'arity' in callee))
+                        throw new Error("can only call functions and classes");
+                    let callee_ = callee;
+                    if (args.length != callee_.arity)
+                        throw new Error(`wrong number of arguments: expected ${callee_.arity}, got ${args.length}`);
+                    else
+                        registers[instr.dest.index] = yield callee_.call(globals, args);
+                    break;
+                }
+                case 'Assign': {
+                    env.set_variable(instr.name, instr.value.resolve(registers));
+                    break;
+                }
+                case 'MakeVar': {
+                    env.put_variable(instr.name, instr.value.resolve(registers));
+                    break;
+                }
+                case 'ReadVar': {
+                    registers[instr.dest.index] = env.get_variable(instr.name);
+                    break;
+                }
+                case 'StartScope': {
+                    env = new runtime.Environment(env);
+                    break;
+                }
+                case 'EndScope': {
+                    env = env.parent;
+                    break;
+                }
+                case 'Return': {
+                    tracker.done();
+                    return instr.value.resolve(registers);
+                }
+                case 'Print': {
+                    console.log(instr.value.resolve(registers).stringify()); // TODO
+                    break;
+                }
+                case 'If': break; // handled by instruction_list
+                case 'While': break; // handled by instruction_list
             }
-            case 'Call': {
-                let callee = instr.callee.resolve(registers);
-                let args = instr.args.map(x => x.resolve(registers));
-                if (!('call' in callee && 'arity' in callee))
-                    throw new Error("can only call functions and classes");
-                let callee_ = callee;
-                if (args.length != callee_.arity)
-                    throw new Error(`wrong number of arguments: expected ${callee_.arity}, got ${args.length}`);
-                else
-                    registers[instr.dest.index] = callee_.call(globals, args);
-                break;
-            }
-            case 'Assign': {
-                env.set_variable(instr.name, instr.value.resolve(registers));
-                break;
-            }
-            case 'MakeVar': {
-                env.put_variable(instr.name, instr.value.resolve(registers));
-                break;
-            }
-            case 'ReadVar': {
-                registers[instr.dest.index] = env.get_variable(instr.name);
-                break;
-            }
-            case 'StartScope': {
-                env = new runtime.Environment(env);
-                break;
-            }
-            case 'EndScope': {
-                env = env.parent;
-                break;
-            }
-            case 'Return': {
-                return instr.value.resolve(registers);
-            }
-            case 'Print': {
-                console.log(instr.value.resolve(registers).stringify()); // TODO
-                break;
-            }
-            case 'If': break; // handled by instruction_list
-            case 'While': break; // handled by instruction_list
         }
-    }
-    return new runtime.Nil();
+        tracker.done();
+        return new runtime.Nil();
+    });
 }
 exports.interpret_ = interpret_;

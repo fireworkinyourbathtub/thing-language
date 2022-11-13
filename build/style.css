@@ -8,8 +8,8 @@
 }
 
 #codeeditor {
-    width: 80%;
-    height: 50em;
+    height: 25em;
+    flex-grow: 1;
 }
 
 .error {
@@ -40,4 +40,29 @@
 
 .error_explanation {
     margin-left: 2em;
+}
+
+.cur_instruction {
+    background-color: yellow;
+    color: black;
+    font-style: bold;
+}
+
+.callstackframe {
+    border: 2px solid black;
+    width: 100%;
+}
+
+#runnerpart {
+    width: 100%;
+}
+
+#callstack {
+    float: left;
+    width: 33%;
+}
+
+#objectspace {
+    float: right;
+    width: 66%;
 }
