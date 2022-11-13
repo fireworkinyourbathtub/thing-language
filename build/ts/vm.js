@@ -26,51 +26,84 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.interpret = void 0;
 const bytecode = __importStar(require("./bytecode"));
 const runtime = __importStar(require("./runtime"));
-class InstructionLister {
-    constructor(env) {
-        this.env = env;
-    }
-    *visitStmtMarker(instr) { yield instr; }
-    *visitUnaryOp(instr) { yield instr; }
-    *visitBinaryOp(instr) { yield instr; }
-    *visitCall(instr) { yield instr; }
-    *visitAssign(instr) { yield instr; }
-    *visitReadVar(instr) { yield instr; }
-    *visitEndScope(instr) { yield instr; }
-    *visitStartScope(instr) { yield instr; }
-    *visitReturn(instr) { yield instr; }
-    *visitIf(instr) {
-        if (instr.cond.to_runtime_value(this.env).is_truthy()) {
-            yield* instruction_list(this.env, instr.true_branch);
-        }
-        else {
-            if (instr.false_branch) {
-                yield* instruction_list(this.env, instr.false_branch);
-            }
-        }
-    }
-    *visitWhile(instr) {
-        while (true) {
-            yield* instruction_list(this.env, instr.check_code);
-            if (!instr.check.to_runtime_value(this.env).is_truthy())
-                break;
-            yield* instruction_list(this.env, instr.body_code);
-        }
-    }
-    *visitMakeVar(instr) { yield instr; }
-    *visitPrint(instr) { yield instr; }
-}
 function* instruction_list(env, instructions) {
     for (let instr of instructions) {
-        yield* instr.accept(new InstructionLister(env));
+        yield* instruction_list_1(env, instr);
+    }
+}
+function* instruction_list_1(env, instr) {
+    switch (instr.type) {
+        case 'If': {
+            if (instr.cond.to_runtime_value(env).is_truthy()) {
+                yield* instruction_list(env, instr.true_branch);
+            }
+            else {
+                if (instr.false_branch) {
+                    yield* instruction_list(env, instr.false_branch);
+                }
+            }
+            break;
+        }
+        case 'While': {
+            while (true) {
+                yield* instruction_list(env, instr.check_code);
+                if (!instr.check.to_runtime_value(env).is_truthy())
+                    break;
+                yield* instruction_list(env, instr.body_code);
+            }
+            break;
+        }
+        default: {
+            yield instr;
+            break;
+        }
     }
 }
 function interpret(instructions) {
     let env = new runtime.Environment(null);
     for (let instr of instruction_list(env, instructions)) {
-        let ppc = new bytecode.PrettyPrintContext();
-        instr.pretty_print(ppc);
-        console.log(ppc.result);
+        console.log(bytecode.pretty_print([instr]));
+        switch (instr.type) {
+            case 'StmtMarker': {
+                break;
+            }
+            case 'UnaryOp': {
+                break;
+            }
+            case 'BinaryOp': {
+                break;
+            }
+            case 'Call': {
+                break;
+            }
+            case 'Assign': {
+                break;
+            }
+            case 'ReadVar': {
+                break;
+            }
+            case 'EndScope': {
+                break;
+            }
+            case 'StartScope': {
+                break;
+            }
+            case 'Return': {
+                break;
+            }
+            case 'If': {
+                break;
+            }
+            case 'While': {
+                break;
+            }
+            case 'MakeVar': {
+                break;
+            }
+            case 'Print': {
+                break;
+            }
+        }
     }
 }
 exports.interpret = interpret;

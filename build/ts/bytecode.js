@@ -23,284 +23,160 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PrettyPrintContext = exports.StmtMarker = exports.UnaryOp = exports.BinaryOp = exports.Call = exports.Assign = exports.ReadVar = exports.EndScope = exports.StartScope = exports.Return = exports.If = exports.While = exports.MakeVar = exports.Print = void 0;
+exports.pretty_print = void 0;
 const diagnostics = __importStar(require("./diagnostics"));
 const ast = __importStar(require("./ast"));
-class Print {
-    constructor(span, expr) {
-        this.span = span;
-        this.expr = expr;
+function pretty_print(instrs) {
+    let indentation = 0;
+    let result = '';
+    function blank_line() {
+        result += '\n';
     }
-    pretty_print(ppc) {
-        ppc.append(`print ${this.expr.pretty_print()};`, this.span);
-    }
-    accept(visitor) {
-        return visitor.visitPrint(this);
-    }
-}
-exports.Print = Print;
-class MakeVar {
-    constructor(span, name, value) {
-        this.span = span;
-        this.name = name;
-        this.value = value;
-    }
-    pretty_print(ppc) {
-        ppc.append(`make_var ${this.name} = ${this.value.pretty_print()};`, this.span);
-    }
-    accept(visitor) {
-        return visitor.visitMakeVar(this);
-    }
-}
-exports.MakeVar = MakeVar;
-class While {
-    constructor(span, check_code, check, body_code) {
-        this.span = span;
-        this.check_code = check_code;
-        this.check = check;
-        this.body_code = body_code;
-    }
-    pretty_print(ppc) {
-        ppc.append('while {', this.span);
-        ppc.indent();
-        ppc.pretty_print_instrs(this.check_code);
-        ppc.append_no_span(`check ${this.check.pretty_print()}`);
-        ppc.dedent();
-        ppc.append_no_span('}');
-        ppc.append_no_span('{');
-        ppc.indent();
-        ppc.pretty_print_instrs(this.body_code);
-        ppc.dedent();
-        ppc.append_no_span('}');
-    }
-    accept(visitor) {
-        return visitor.visitWhile(this);
-    }
-}
-exports.While = While;
-class If {
-    constructor(span, cond, true_branch, false_branch) {
-        this.span = span;
-        this.cond = cond;
-        this.true_branch = true_branch;
-        this.false_branch = false_branch;
-    }
-    pretty_print(ppc) {
-        ppc.append('if ${this.cond.pretty_print()} {', this.span);
-        ppc.indent();
-        ppc.pretty_print_instrs(this.true_branch);
-        ppc.dedent();
-        if (this.false_branch) {
-            ppc.append_no_span('} else {');
-            ppc.indent();
-            ppc.pretty_print_instrs(this.false_branch);
-            ppc.dedent();
-            ppc.append_no_span('}');
-        }
-        else {
-            ppc.append_no_span('}');
-        }
-    }
-    accept(visitor) {
-        return visitor.visitIf(this);
-    }
-}
-exports.If = If;
-class Return {
-    constructor(span, v) {
-        this.span = span;
-        this.v = v;
-    }
-    pretty_print(ppc) {
-        ppc.append(`return ${this.v.pretty_print()};`, this.span);
-    }
-    accept(visitor) {
-        return visitor.visitReturn(this);
-    }
-}
-exports.Return = Return;
-class StartScope {
-    constructor(span) {
-        this.span = span;
-    }
-    pretty_print(ppc) {
-        ppc.append(`start_scope;`, this.span);
-    }
-    accept(visitor) {
-        return visitor.visitStartScope(this);
-    }
-}
-exports.StartScope = StartScope;
-class EndScope {
-    constructor(span) {
-        this.span = span;
-    }
-    pretty_print(ppc) {
-        ppc.append(`end_scope;`, this.span);
-    }
-    accept(visitor) {
-        return visitor.visitEndScope(this);
-    }
-}
-exports.EndScope = EndScope;
-class ReadVar {
-    constructor(span, v, dest) {
-        this.span = span;
-        this.v = v;
-        this.dest = dest;
-    }
-    pretty_print(ppc) {
-        ppc.append(`read_var ${this.v} -> ${this.dest.pretty_print()};`, this.span);
-    }
-    accept(visitor) {
-        return visitor.visitReadVar(this);
-    }
-}
-exports.ReadVar = ReadVar;
-class Assign {
-    constructor(span, variable, value) {
-        this.span = span;
-        this.variable = variable;
-        this.value = value;
-    }
-    pretty_print(ppc) {
-        ppc.append(`assign ${this.variable} = ${this.value.pretty_print()};`, this.span);
-    }
-    accept(visitor) {
-        return visitor.visitAssign(this);
-    }
-}
-exports.Assign = Assign;
-class Call {
-    constructor(span, callee, args, dest) {
-        this.span = span;
-        this.callee = callee;
-        this.args = args;
-        this.dest = dest;
-    }
-    pretty_print(ppc) {
-        ppc.append(`call ${this.callee.pretty_print()}(${this.args.map(a => a.pretty_print()).join()}) -> ${this.dest.pretty_print()};`, this.span);
-    }
-    accept(visitor) {
-        return visitor.visitCall(this);
-    }
-}
-exports.Call = Call;
-class BinaryOp {
-    constructor(span, l, r, op, dest) {
-        this.span = span;
-        this.l = l;
-        this.r = r;
-        this.op = op;
-        this.dest = dest;
-    }
-    pretty_print(ppc) {
-        let op_name;
-        switch (this.op) {
-            case ast.BinaryOperator.Plus:
-                op_name = 'add';
-                break;
-            case ast.BinaryOperator.Minus:
-                op_name = 'sub';
-                break;
-            case ast.BinaryOperator.Star:
-                op_name = 'mul';
-                break;
-            case ast.BinaryOperator.Slash:
-                op_name = 'div';
-                break;
-            case ast.BinaryOperator.Less:
-                op_name = 'cmp<';
-                break;
-            case ast.BinaryOperator.Greater:
-                op_name = 'cmp>';
-                break;
-            case ast.BinaryOperator.LessEqual:
-                op_name = 'cmp<=';
-                break;
-            case ast.BinaryOperator.EqualEqual:
-                op_name = 'cmp==';
-                break;
-            case ast.BinaryOperator.GreaterEqual:
-                op_name = 'cmp>=';
-                break;
-            case ast.BinaryOperator.BangEqual:
-                op_name = 'cmp!=';
-                break;
-        }
-        ppc.append(`${op_name} ${this.l.pretty_print()} ${this.r.pretty_print()} -> ${this.dest.pretty_print()};`, this.span);
-    }
-    accept(visitor) {
-        return visitor.visitBinaryOp(this);
-    }
-}
-exports.BinaryOp = BinaryOp;
-class UnaryOp {
-    constructor(span, v, op, dest) {
-        this.span = span;
-        this.v = v;
-        this.op = op;
-        this.dest = dest;
-    }
-    pretty_print(ppc) {
-        let op_name;
-        switch (this.op) {
-            case ast.UnaryOperator.Minus:
-                op_name = 'neg';
-                break;
-            case ast.UnaryOperator.Bang:
-                op_name = 'logic_neg';
-                break;
-        }
-        ppc.append(`${op_name} ${this.v.pretty_print()} -> ${this.dest.pretty_print()};`, this.span);
-    }
-    accept(visitor) {
-        return visitor.visitUnaryOp(this);
-    }
-}
-exports.UnaryOp = UnaryOp;
-class StmtMarker {
-    constructor(span) {
-        this.span = span;
-    }
-    pretty_print(ppc) {
-        ppc.append_marker(`// line ${this.span.start_line}: ${diagnostics.get_line(this.span.source, this.span.start_line)}`);
-    }
-    accept(visitor) {
-        return visitor.visitStmtMarker(this);
-    }
-}
-exports.StmtMarker = StmtMarker;
-class PrettyPrintContext {
-    constructor() {
-        this.indentation = 0;
-        this.result = '';
-    }
-    indent() {
-        ++this.indentation;
-    }
-    dedent() {
-        --this.indentation;
-    }
-    blank_line() {
-        this.result += '\n';
-    }
-    append(s, sp) {
+    function append(s, sp) {
         let sp_contents = sp.contents;
         let sp_annotation = sp_contents.split('\n').length > 1 ? `${sp_contents.split('\n')[0]}...` : sp_contents;
-        this.append_no_span(`${s}${' '.repeat(40 - s.length)}// ${sp_annotation}`);
+        append_no_span(`${s}${' '.repeat(40 - s.length)}// ${sp_annotation}`);
     }
-    append_no_span(s) {
-        this.result += `${' '.repeat(this.indentation * 4)}${s}\n`;
+    function append_no_span(s) {
+        result += `${' '.repeat(indentation * 4)}${s}\n`;
     }
-    append_marker(s) {
-        this.blank_line();
-        this.append_no_span(s);
+    function append_marker(s) {
+        blank_line();
+        append_no_span(s);
     }
-    pretty_print_instrs(instrs) {
+    function pp_instrs(instrs) {
         for (let instr of instrs) {
-            instr.pretty_print(this);
+            pp_instr(instr);
         }
     }
+    function pp_instr(instr) {
+        switch (instr.type) {
+            case 'Print': {
+                append(`print ${instr.value.pretty_print()};`, instr.span);
+                break;
+            }
+            case 'MakeVar': {
+                append(`make_var ${instr.name} = ${instr.value.pretty_print()};`, instr.span);
+                break;
+            }
+            case 'While': {
+                append('while {', instr.span);
+                indent();
+                pp_instrs(instr.check_code);
+                append_no_span(`check ${instr.check.pretty_print()}`);
+                dedent();
+                append_no_span('}');
+                append_no_span('{');
+                indent();
+                pp_instrs(instr.body_code);
+                dedent();
+                append_no_span('}');
+                break;
+            }
+            case 'If': {
+                append('if ${instr.cond.pretty_print()} {', instr.span);
+                indent();
+                pp_instrs(instr.true_branch);
+                dedent();
+                if (instr.false_branch) {
+                    append_no_span('} else {');
+                    indent();
+                    pp_instrs(instr.false_branch);
+                    dedent();
+                    append_no_span('}');
+                }
+                else {
+                    append_no_span('}');
+                }
+                break;
+            }
+            case 'Return': {
+                append(`return ${instr.value.pretty_print()};`, instr.span);
+                break;
+            }
+            case 'StartScope': {
+                append(`start_scope;`, instr.span);
+                break;
+            }
+            case 'EndScope': {
+                append(`end_scope;`, instr.span);
+                break;
+            }
+            case 'ReadVar': {
+                append(`read_var ${instr.name} -> ${instr.dest.pretty_print()};`, instr.span);
+                break;
+            }
+            case 'Assign': {
+                append(`assign ${instr.name} = ${instr.value.pretty_print()};`, instr.span);
+                break;
+            }
+            case 'Call': {
+                append(`call ${instr.callee.pretty_print()}(${instr.args.map(a => a.pretty_print()).join()}) -> ${instr.dest.pretty_print()};`, instr.span);
+                break;
+            }
+            case 'BinaryOp': {
+                let op_name;
+                switch (instr.op) {
+                    case ast.BinaryOperator.Plus:
+                        op_name = 'add';
+                        break;
+                    case ast.BinaryOperator.Minus:
+                        op_name = 'sub';
+                        break;
+                    case ast.BinaryOperator.Star:
+                        op_name = 'mul';
+                        break;
+                    case ast.BinaryOperator.Slash:
+                        op_name = 'div';
+                        break;
+                    case ast.BinaryOperator.Less:
+                        op_name = 'cmp<';
+                        break;
+                    case ast.BinaryOperator.Greater:
+                        op_name = 'cmp>';
+                        break;
+                    case ast.BinaryOperator.LessEqual:
+                        op_name = 'cmp<=';
+                        break;
+                    case ast.BinaryOperator.EqualEqual:
+                        op_name = 'cmp==';
+                        break;
+                    case ast.BinaryOperator.GreaterEqual:
+                        op_name = 'cmp>=';
+                        break;
+                    case ast.BinaryOperator.BangEqual:
+                        op_name = 'cmp!=';
+                        break;
+                }
+                append(`${op_name} ${instr.l.pretty_print()} ${instr.r.pretty_print()} -> ${instr.dest.pretty_print()};`, instr.span);
+                break;
+            }
+            case 'UnaryOp': {
+                let op_name;
+                switch (instr.op) {
+                    case ast.UnaryOperator.Minus:
+                        op_name = 'neg';
+                        break;
+                    case ast.UnaryOperator.Bang:
+                        op_name = 'logic_neg';
+                        break;
+                }
+                append(`${op_name} ${instr.v.pretty_print()} -> ${instr.dest.pretty_print()};`, instr.span);
+                break;
+            }
+            case 'StmtMarker': {
+                append_marker(`// line ${instr.span.start_line}: ${diagnostics.get_line(instr.span.source, instr.span.start_line)}`);
+                break;
+            }
+        }
+    }
+    function indent() {
+        ++indentation;
+    }
+    function dedent() {
+        --indentation;
+    }
+    pp_instrs(instrs);
+    return result;
 }
-exports.PrettyPrintContext = PrettyPrintContext;
+exports.pretty_print = pretty_print;

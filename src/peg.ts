@@ -69,7 +69,7 @@ export abstract class PEG<T> {
     }
 }
 
-export class Token<T extends lexer.Token> extends PEG<T & diagnostics.Located> {
+export class Token<T extends lexer.Token> extends PEG<T & diagnostics.Located> { // TODO: possibly do something to infer T or type
     constructor(readonly type: lexer.TokenType) {
         super();
     }

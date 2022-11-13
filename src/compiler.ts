@@ -16,7 +16,7 @@ class RegisterContext {
 }
 
 function make_stmt_marker(stmt: ast.Stmt) {
-    return new bytecode.StmtMarker(stmt.span);
+    return { type: 'StmtMarker', span: stmt.span} as const;
 }
 
 export function compile(stmts: ast.Stmt[]): bytecode.Instruction[] {
@@ -41,7 +41,7 @@ function compile_stmt(stmt: ast.Stmt, instructions: bytecode.Instruction[], regi
 
         case 'PrintStmt': {
             let e = compile_expr(stmt.expr, instructions, register_context);
-            instructions.push(new bytecode.Print(stmt.span, e));
+            instructions.push({ type: 'Print', span: stmt.span, value: e} as const);
             break;
         }
 
@@ -53,16 +53,16 @@ function compile_stmt(stmt: ast.Stmt, instructions: bytecode.Instruction[], regi
                 e = new runtime.Nil();
             }
 
-            instructions.push(new bytecode.MakeVar(stmt.span, stmt.name, e));
+            instructions.push({ type: 'MakeVar', span: stmt.span, name: stmt.name, value: e} as const);
             break;
         }
 
         case 'BlockStmt': {
-            instructions.push(new bytecode.StartScope(stmt.obrace_sp));
+            instructions.push({ type: 'StartScope', span: stmt.obrace_sp} as const);
             for (let sub_stmt of stmt.stmts) {
                 compile_stmt(sub_stmt, instructions, register_context);
             }
-            instructions.push(new bytecode.EndScope(stmt.cbrace_sp));
+            instructions.push({ type: 'EndScope', span: stmt.cbrace_sp} as const);
             break;
         }
 
@@ -72,12 +72,12 @@ function compile_stmt(stmt: ast.Stmt, instructions: bytecode.Instruction[], regi
             compile_stmt(stmt.body, instrs, register_context);
 
             let fn = new runtime.Function(stmt.name, stmt.params, instructions);
-            instructions.push(new bytecode.MakeVar(stmt.span, stmt.name, fn));
+            instructions.push({ type: 'MakeVar', span: stmt.span, name: stmt.name, value: fn} as const);
             break;
         }
 
         case 'ForStmt': {
-            instructions.push(new bytecode.StartScope(stmt.for_sp));
+            instructions.push({ type: 'StartScope', span: stmt.for_sp} as const);
             if (stmt.initializer) {
                 compile_stmt(stmt.initializer, instructions, register_context);
             }
@@ -97,8 +97,8 @@ function compile_stmt(stmt: ast.Stmt, instructions: bytecode.Instruction[], regi
                 compile_expr(stmt.increment, body_code, register_context);
             }
 
-            instructions.push(new bytecode.While(stmt.span, check_code, check, body_code));
-            instructions.push(new bytecode.EndScope(stmt.for_sp)); // TODO: better span?
+            instructions.push({ type: 'While', span: stmt.span, check_code, check, body_code} as const);
+            instructions.push({ type: 'EndScope', span: stmt.for_sp} as const); // TODO: better span?
             break;
         }
 
@@ -116,7 +116,7 @@ function compile_stmt(stmt: ast.Stmt, instructions: bytecode.Instruction[], regi
                 false_code = null;
             }
 
-            instructions.push(new bytecode.If(stmt.span, cond, true_code, false_code));
+            instructions.push({ type: 'If', span: stmt.span, cond, true_branch: true_code, false_branch: false_code} as const);
             break;
         }
 
@@ -128,7 +128,7 @@ function compile_stmt(stmt: ast.Stmt, instructions: bytecode.Instruction[], regi
                 e = new runtime.Nil();
             }
 
-            instructions.push(new bytecode.Return(stmt.span, e));
+            instructions.push({ type: 'Return', span: stmt.span, value: e} as const);
             break;
         }
 
@@ -139,7 +139,7 @@ function compile_stmt(stmt: ast.Stmt, instructions: bytecode.Instruction[], regi
             let body_code: bytecode.Instruction[] = [];
             compile_stmt(stmt.body, body_code, register_context);
 
-            instructions.push(new bytecode.While(stmt.span, check_code, check, body_code));
+            instructions.push({ type: 'While', span: stmt.span, check_code, check, body_code} as const);
             break;
         }
 
@@ -154,20 +154,20 @@ function compile_expr(expr: ast.Expr, instructions: bytecode.Instruction[], regi
 
             let reg = register_context.new_register();
 
-            instructions.push(new bytecode.BinaryOp(expr.span, l, r, expr.op, reg));
+            instructions.push({ type: 'BinaryOp', span: expr.span, l, r, op: expr.op, dest: reg} as const);
             return reg;
         }
 
         case 'UnaryExpr': {
             let v = compile_expr(expr.operand, instructions, register_context);
             let reg = register_context.new_register();
-            instructions.push(new bytecode.UnaryOp(expr.span, v, expr.operator, reg));
+            instructions.push({ type: 'UnaryOp', span: expr.span, v, op: expr.operator, dest: reg} as const);
             return reg;
         }
 
         case 'VarExpr': {
             let reg = register_context.new_register();
-            instructions.push(new bytecode.ReadVar(expr.span, expr.name, reg));
+            instructions.push({ type: 'ReadVar', span: expr.span, name: expr.name, dest: reg} as const);
             return reg;
         }
 
@@ -188,9 +188,9 @@ function compile_expr(expr: ast.Expr, instructions: bytecode.Instruction[], regi
         }
 
         case 'AssignExpr': {
-            let v = compile_expr(expr.value, instructions, register_context);
-            instructions.push(new bytecode.Assign(expr.span, expr.name, v));
-            return v;
+            let value = compile_expr(expr.value, instructions, register_context);
+            instructions.push({ type: 'Assign', span: expr.span, name: expr.name, value} as const);
+            return value;
         }
 
         case 'CallExpr': {
@@ -202,7 +202,7 @@ function compile_expr(expr: ast.Expr, instructions: bytecode.Instruction[], regi
             }
 
             let reg = register_context.new_register();
-            instructions.push(new bytecode.Call(expr.span, callee, args, reg));
+            instructions.push({ type: 'Call', span: expr.span, callee, args, dest: reg} as const);
             return reg;
         }
 

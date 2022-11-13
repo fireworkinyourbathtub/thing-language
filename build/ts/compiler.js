@@ -24,7 +24,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.compile = void 0;
-const bytecode = __importStar(require("./bytecode"));
 const runtime = __importStar(require("./runtime"));
 class RegisterContext {
     constructor() {
@@ -35,7 +34,7 @@ class RegisterContext {
     }
 }
 function make_stmt_marker(stmt) {
-    return new bytecode.StmtMarker(stmt.span);
+    return { type: 'StmtMarker', span: stmt.span };
 }
 function compile(stmts) {
     let register_context = new RegisterContext();
@@ -55,7 +54,7 @@ function compile_stmt(stmt, instructions, register_context) {
         }
         case 'PrintStmt': {
             let e = compile_expr(stmt.expr, instructions, register_context);
-            instructions.push(new bytecode.Print(stmt.span, e));
+            instructions.push({ type: 'Print', span: stmt.span, value: e });
             break;
         }
         case 'VarStmt': {
@@ -66,15 +65,15 @@ function compile_stmt(stmt, instructions, register_context) {
             else {
                 e = new runtime.Nil();
             }
-            instructions.push(new bytecode.MakeVar(stmt.span, stmt.name, e));
+            instructions.push({ type: 'MakeVar', span: stmt.span, name: stmt.name, value: e });
             break;
         }
         case 'BlockStmt': {
-            instructions.push(new bytecode.StartScope(stmt.obrace_sp));
+            instructions.push({ type: 'StartScope', span: stmt.obrace_sp });
             for (let sub_stmt of stmt.stmts) {
                 compile_stmt(sub_stmt, instructions, register_context);
             }
-            instructions.push(new bytecode.EndScope(stmt.cbrace_sp));
+            instructions.push({ type: 'EndScope', span: stmt.cbrace_sp });
             break;
         }
         case 'FunctionStmt': {
@@ -82,11 +81,11 @@ function compile_stmt(stmt, instructions, register_context) {
             let instrs = [];
             compile_stmt(stmt.body, instrs, register_context);
             let fn = new runtime.Function(stmt.name, stmt.params, instructions);
-            instructions.push(new bytecode.MakeVar(stmt.span, stmt.name, fn));
+            instructions.push({ type: 'MakeVar', span: stmt.span, name: stmt.name, value: fn });
             break;
         }
         case 'ForStmt': {
-            instructions.push(new bytecode.StartScope(stmt.for_sp));
+            instructions.push({ type: 'StartScope', span: stmt.for_sp });
             if (stmt.initializer) {
                 compile_stmt(stmt.initializer, instructions, register_context);
             }
@@ -103,8 +102,8 @@ function compile_stmt(stmt, instructions, register_context) {
             if (stmt.increment) {
                 compile_expr(stmt.increment, body_code, register_context);
             }
-            instructions.push(new bytecode.While(stmt.span, check_code, check, body_code));
-            instructions.push(new bytecode.EndScope(stmt.for_sp)); // TODO: better span?
+            instructions.push({ type: 'While', span: stmt.span, check_code, check, body_code });
+            instructions.push({ type: 'EndScope', span: stmt.for_sp }); // TODO: better span?
             break;
         }
         case 'IfStmt': {
@@ -119,7 +118,7 @@ function compile_stmt(stmt, instructions, register_context) {
             else {
                 false_code = null;
             }
-            instructions.push(new bytecode.If(stmt.span, cond, true_code, false_code));
+            instructions.push({ type: 'If', span: stmt.span, cond, true_branch: true_code, false_branch: false_code });
             break;
         }
         case 'ReturnStmt': {
@@ -130,7 +129,7 @@ function compile_stmt(stmt, instructions, register_context) {
             else {
                 e = new runtime.Nil();
             }
-            instructions.push(new bytecode.Return(stmt.span, e));
+            instructions.push({ type: 'Return', span: stmt.span, value: e });
             break;
         }
         case 'WhileStmt': {
@@ -138,7 +137,7 @@ function compile_stmt(stmt, instructions, register_context) {
             let check = compile_expr(stmt.condition, check_code, register_context);
             let body_code = [];
             compile_stmt(stmt.body, body_code, register_context);
-            instructions.push(new bytecode.While(stmt.span, check_code, check, body_code));
+            instructions.push({ type: 'While', span: stmt.span, check_code, check, body_code });
             break;
         }
     }
@@ -149,18 +148,18 @@ function compile_expr(expr, instructions, register_context) {
             let l = compile_expr(expr.left, instructions, register_context);
             let r = compile_expr(expr.right, instructions, register_context);
             let reg = register_context.new_register();
-            instructions.push(new bytecode.BinaryOp(expr.span, l, r, expr.op, reg));
+            instructions.push({ type: 'BinaryOp', span: expr.span, l, r, op: expr.op, dest: reg });
             return reg;
         }
         case 'UnaryExpr': {
             let v = compile_expr(expr.operand, instructions, register_context);
             let reg = register_context.new_register();
-            instructions.push(new bytecode.UnaryOp(expr.span, v, expr.operator, reg));
+            instructions.push({ type: 'UnaryOp', span: expr.span, v, op: expr.operator, dest: reg });
             return reg;
         }
         case 'VarExpr': {
             let reg = register_context.new_register();
-            instructions.push(new bytecode.ReadVar(expr.span, expr.name, reg));
+            instructions.push({ type: 'ReadVar', span: expr.span, name: expr.name, dest: reg });
             return reg;
         }
         case 'StringLiteral': {
@@ -176,9 +175,9 @@ function compile_expr(expr, instructions, register_context) {
             return new runtime.Nil();
         }
         case 'AssignExpr': {
-            let v = compile_expr(expr.value, instructions, register_context);
-            instructions.push(new bytecode.Assign(expr.span, expr.name, v));
-            return v;
+            let value = compile_expr(expr.value, instructions, register_context);
+            instructions.push({ type: 'Assign', span: expr.span, name: expr.name, value });
+            return value;
         }
         case 'CallExpr': {
             let callee = compile_expr(expr.callee, instructions, register_context);
@@ -187,7 +186,7 @@ function compile_expr(expr, instructions, register_context) {
                 args.push(compile_expr(a_ast, instructions, register_context));
             }
             let reg = register_context.new_register();
-            instructions.push(new bytecode.Call(expr.span, callee, args, reg));
+            instructions.push({ type: 'Call', span: expr.span, callee, args, dest: reg });
             return reg;
         }
         case 'LogicalExpr': {

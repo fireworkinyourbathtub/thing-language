@@ -1,50 +1,83 @@
 import * as bytecode from './bytecode';
 import * as runtime from './runtime';
 
-class InstructionLister implements bytecode.InstructionVisitor<IterableIterator<bytecode.Instruction>> {
-    constructor(public env: runtime.Environment) {}
-    *visitStmtMarker(instr: bytecode.StmtMarker) { yield instr; }
-    *visitUnaryOp(instr: bytecode.UnaryOp) { yield instr; }
-    *visitBinaryOp(instr: bytecode.BinaryOp) { yield instr; }
-    *visitCall(instr: bytecode.Call) { yield instr; }
-    *visitAssign(instr: bytecode.Assign) { yield instr; }
-    *visitReadVar(instr: bytecode.ReadVar) { yield instr; }
-    *visitEndScope(instr: bytecode.EndScope) { yield instr; }
-    *visitStartScope(instr: bytecode.StartScope) { yield instr; }
-    *visitReturn(instr: bytecode.Return) { yield instr; }
-    *visitIf(instr: bytecode.If): IterableIterator<bytecode.Instruction> {
-        if (instr.cond.to_runtime_value(this.env).is_truthy()) {
-            yield* instruction_list(this.env, instr.true_branch);
-        } else {
-            if (instr.false_branch) {
-                yield* instruction_list(this.env, instr.false_branch);
-            }
-        }
+
+function* instruction_list(env: runtime.Environment, instructions: bytecode.Instruction[]): IterableIterator<bytecode.Instruction> {
+    for (let instr of instructions) {
+        yield* instruction_list_1(env, instr);
     }
-    *visitWhile(instr: bytecode.While): IterableIterator<bytecode.Instruction> {
-        while (true) {
-            yield* instruction_list(this.env, instr.check_code);
-            if (!instr.check.to_runtime_value(this.env).is_truthy()) break;
-            yield* instruction_list(this.env, instr.body_code);
-        }
-    }
-    *visitMakeVar(instr: bytecode.MakeVar) { yield instr; }
-    *visitPrint(instr: bytecode.Print) { yield instr; }
 }
 
-function* instruction_list(env: runtime.Environment, instructions: bytecode.Instruction[]) {
-    for (let instr of instructions) {
-        yield* instr.accept(new InstructionLister(env));
+function* instruction_list_1(env: runtime.Environment, instr: bytecode.Instruction): IterableIterator<bytecode.Instruction> {
+    switch (instr.type) {
+        case 'If': {
+            if (instr.cond.to_runtime_value(env).is_truthy()) {
+                yield* instruction_list(env, instr.true_branch);
+            } else {
+                if (instr.false_branch) {
+                    yield* instruction_list(env, instr.false_branch);
+                }
+            }
+            break;
+        }
+        case 'While': {
+            while (true) {
+                yield* instruction_list(env, instr.check_code);
+                if (!instr.check.to_runtime_value(env).is_truthy()) break;
+                yield* instruction_list(env, instr.body_code);
+            }
+            break;
+        }
+
+        default: {
+            yield instr;
+            break;
+        }
     }
 }
 
 export function interpret(instructions: bytecode.Instruction[]) {
     let env = new runtime.Environment(null);
     for (let instr of instruction_list(env, instructions)) {
-        let ppc = new bytecode.PrettyPrintContext();
-        instr.pretty_print(ppc)
-        console.log(ppc.result);
-
-
+        console.log(bytecode.pretty_print([instr]));
+        switch (instr.type) {
+            case 'StmtMarker': break;
+            case 'UnaryOp': { // TODO
+                break;
+            }
+            case 'BinaryOp': { // TODO
+                break;
+            }
+            case 'Call': { // TODO
+                break;
+            }
+            case 'Assign': { // TODO
+                break;
+            }
+            case 'ReadVar': { // TODO
+                break;
+            }
+            case 'EndScope': { // TODO
+                break;
+            }
+            case 'StartScope': { // TODO
+                break;
+            }
+            case 'Return': { // TODO
+                break;
+            }
+            case 'If': { // TODO
+                break;
+            }
+            case 'While': { // TODO
+                break;
+            }
+            case 'MakeVar': { // TODO
+                break;
+            }
+            case 'Print': { // TODO
+                break;
+            }
+        }
     }
 }

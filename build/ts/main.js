@@ -40,10 +40,9 @@ document.getElementById('submitbutton').addEventListener('click', function () {
     if (parsed) {
         let compiled = compiler.compile(parsed);
         vm.interpret(compiled);
-        let ppc = new bytecode.PrettyPrintContext();
-        ppc.pretty_print_instrs(compiled);
-        document.getElementById('compiledcodeview').textContent = ppc.result;
+        let pp = bytecode.pretty_print(compiled);
+        document.getElementById('compiledcodeview').textContent = pp;
         console.log(compiled);
-        console.log(ppc.result);
+        console.log(pp);
     }
 });
