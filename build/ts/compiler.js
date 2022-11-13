@@ -80,7 +80,7 @@ function compile_stmt(stmt, instructions, register_context) {
             let register_context = new RegisterContext();
             let instrs = [];
             compile_stmt(stmt.body, instrs, register_context);
-            let fn = new runtime.Function(stmt.name, stmt.params, instructions);
+            let fn = new runtime.Function(stmt.name, stmt.params, instrs);
             instructions.push({ type: 'MakeVar', span: stmt.span, name: stmt.name, value: fn });
             break;
         }

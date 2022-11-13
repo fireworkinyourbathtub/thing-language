@@ -1,35 +1,21 @@
 import * as bytecode from './bytecode';
+import * as vm from './vm';
 
 export class Environment {
-    registers: RuntimeValue[] = [];
     variables: Map<string, RuntimeValue> = new Map();
 
     constructor(public parent: Environment | null) {}
 
-    get_register(index: number) {
-        if (index >= this.registers.length) {
-            throw new Error('internal error: get register that doesn\'t exist'); // TODO: new runtime error class to catch
-        } else {
-            return this.registers[index];
-        }
-    }
-
-    put_register(index: number, value: RuntimeValue) {
-        this.registers[index] = value;
-    }
-
     get_variable(name: string): RuntimeValue {
-        if (!this.variables.has(name))
-            throw new Error(`get variable that does not exist: '${name}'`); // TODO: new runtime error class to catch
-        else
-            return this.variables.get(name)!;
+        if (this.variables.has(name)) return this.variables.get(name)!;
+        else if (this.parent != null) return this.parent.get_variable(name);
+        else throw new Error(`get variable that does not exist: '${name}'`); // TODO: new runtime error class to catch
     }
 
     set_variable(name: string, value: RuntimeValue)  {
-        if (!this.variables.has(name))
-            throw new Error(`set variable that does not exist: '${name}'`); // TODO: new runtime error class to catch
-        else
-            this.variables.set(name, value);
+        if (this.variables.has(name)) this.variables.set(name, value);
+        else if (this.parent != null) this.parent.set_variable(name, value);
+        else throw new Error(`set variable that does not exist: '${name}'`); // TODO: new runtime error class to catch
     }
 
     put_variable(name: string, value: RuntimeValue) {
@@ -39,64 +25,93 @@ export class Environment {
 
 export interface Value {
     pretty_print(): string;
-    to_runtime_value(env: Environment): RuntimeValue;
+    resolve(registers: RuntimeValue[]): RuntimeValue;
 }
 
-export interface RuntimeValue {
+export interface Callable {
+    arity: number;
+    call(parent_env: Environment, args: RuntimeValue[]): RuntimeValue;
+}
+
+export interface RuntimeValue extends Value {
     is_truthy(): boolean;
+    type(): string;
+    stringify(): string;
 }
 
 export class Register implements Value {
     constructor(public index: number) {}
     pretty_print() { return `%${this.index}`; }
 
-    to_runtime_value(env: Environment) {
-        return env.get_register(this.index);
+    resolve(registers: RuntimeValue[]) {
+        return registers[this.index];
     }
 }
 
 export class Nil implements Value, RuntimeValue {
     constructor() {}
-    pretty_print() { return 'nil'; }
+    pretty_print() { return this.stringify(); }
 
-    to_runtime_value() { return this; }
+    resolve() { return this; }
 
     is_truthy() { return false; }
+    type() { return 'nil'; }
+    stringify() { return 'nil'; }
 }
 
-export class Function implements Value, RuntimeValue {
-    constructor(public readonly name: string, public readonly params: string[], public readonly instructions: bytecode.Instruction[]) {}
-    pretty_print() { return `<function '${this.name}'>`; }
+export class Function implements Value, RuntimeValue, Callable {
+    arity: number;
 
-    to_runtime_value() { return this; }
+    constructor(public readonly name: string, public readonly params: string[], public readonly instructions: bytecode.Instruction[]) {
+        this.arity = this.params.length;
+    }
+    pretty_print() { return this.stringify(); }
+
+    resolve() { return this; }
 
     is_truthy() { return true; }
+    type() { return 'function'; }
+    stringify() { return `<function '${this.name}'>`; }
+
+    call(parent_env: Environment, args: RuntimeValue[]) {
+        let env = new Environment(parent_env);
+        for (let i = 0; i < this.params.length; ++i) { // should be same size
+            env.put_variable(this.params[i], args[i]);
+        }
+
+        return vm.interpret_(env, this.instructions);
+    }
 }
 
 export class String implements Value, RuntimeValue {
     constructor(public x: string) {}
     pretty_print() { return `"${this.x}"`; }
 
-    to_runtime_value() { return this; }
+    resolve() { return this; }
 
     is_truthy() { return true; }
+    type() { return 'string'; }
+    stringify() { return this.x; };
 }
 
 export class Number implements Value, RuntimeValue {
     constructor(public x: number) {}
     pretty_print() { return this.x.toString(); }
 
-    to_runtime_value() { return this; }
+    resolve() { return this; }
 
     is_truthy() { return true; }
+    type() { return 'number'; }
+    stringify() { return this.x.toString(); }
 }
 
 export class Bool implements Value, RuntimeValue {
     constructor(public x: boolean) {}
     pretty_print() { return this.x.toString(); }
 
-    to_runtime_value() { return this; }
+    resolve() { return this; }
 
     is_truthy() { return this.x; }
+    type() { return 'bool'; }
+    stringify() { return this.x.toString(); }
 }
-

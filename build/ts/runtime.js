@@ -1,34 +1,50 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Bool = exports.Number = exports.String = exports.Function = exports.Nil = exports.Register = exports.Environment = void 0;
+const vm = __importStar(require("./vm"));
 class Environment {
     constructor(parent) {
         this.parent = parent;
-        this.registers = [];
         this.variables = new Map();
     }
-    get_register(index) {
-        if (index >= this.registers.length) {
-            throw new Error('internal error: get register that doesn\'t exist'); // TODO: new runtime error class to catch
-        }
-        else {
-            return this.registers[index];
-        }
-    }
-    put_register(index, value) {
-        this.registers[index] = value;
-    }
     get_variable(name) {
-        if (!this.variables.has(name))
-            throw new Error(`get variable that does not exist: '${name}'`); // TODO: new runtime error class to catch
-        else
+        if (this.variables.has(name))
             return this.variables.get(name);
+        else if (this.parent != null)
+            return this.parent.get_variable(name);
+        else
+            throw new Error(`get variable that does not exist: '${name}'`); // TODO: new runtime error class to catch
     }
     set_variable(name, value) {
-        if (!this.variables.has(name))
-            throw new Error(`set variable that does not exist: '${name}'`); // TODO: new runtime error class to catch
-        else
+        if (this.variables.has(name))
             this.variables.set(name, value);
+        else if (this.parent != null)
+            this.parent.set_variable(name, value);
+        else
+            throw new Error(`set variable that does not exist: '${name}'`); // TODO: new runtime error class to catch
     }
     put_variable(name, value) {
         this.variables.set(name, value);
@@ -40,16 +56,18 @@ class Register {
         this.index = index;
     }
     pretty_print() { return `%${this.index}`; }
-    to_runtime_value(env) {
-        return env.get_register(this.index);
+    resolve(registers) {
+        return registers[this.index];
     }
 }
 exports.Register = Register;
 class Nil {
     constructor() { }
-    pretty_print() { return 'nil'; }
-    to_runtime_value() { return this; }
+    pretty_print() { return this.stringify(); }
+    resolve() { return this; }
     is_truthy() { return false; }
+    type() { return 'nil'; }
+    stringify() { return 'nil'; }
 }
 exports.Nil = Nil;
 class Function {
@@ -57,10 +75,20 @@ class Function {
         this.name = name;
         this.params = params;
         this.instructions = instructions;
+        this.arity = this.params.length;
     }
-    pretty_print() { return `<function '${this.name}'>`; }
-    to_runtime_value() { return this; }
+    pretty_print() { return this.stringify(); }
+    resolve() { return this; }
     is_truthy() { return true; }
+    type() { return 'function'; }
+    stringify() { return `<function '${this.name}'>`; }
+    call(parent_env, args) {
+        let env = new Environment(parent_env);
+        for (let i = 0; i < this.params.length; ++i) { // should be same size
+            env.put_variable(this.params[i], args[i]);
+        }
+        return vm.interpret_(env, this.instructions);
+    }
 }
 exports.Function = Function;
 class String {
@@ -68,8 +96,11 @@ class String {
         this.x = x;
     }
     pretty_print() { return `"${this.x}"`; }
-    to_runtime_value() { return this; }
+    resolve() { return this; }
     is_truthy() { return true; }
+    type() { return 'string'; }
+    stringify() { return this.x; }
+    ;
 }
 exports.String = String;
 class Number {
@@ -77,8 +108,10 @@ class Number {
         this.x = x;
     }
     pretty_print() { return this.x.toString(); }
-    to_runtime_value() { return this; }
+    resolve() { return this; }
     is_truthy() { return true; }
+    type() { return 'number'; }
+    stringify() { return this.x.toString(); }
 }
 exports.Number = Number;
 class Bool {
@@ -86,7 +119,9 @@ class Bool {
         this.x = x;
     }
     pretty_print() { return this.x.toString(); }
-    to_runtime_value() { return this; }
+    resolve() { return this; }
     is_truthy() { return this.x; }
+    type() { return 'bool'; }
+    stringify() { return this.x.toString(); }
 }
 exports.Bool = Bool;
