@@ -42,5 +42,6 @@ document.getElementById('submitbutton').addEventListener('click', function () {
         vm.interpret(compiled);
         let pp = bytecode.pretty_print(compiled);
         document.getElementById('compiledcodeview').textContent = pp;
+        console.log(pp);
     }
 });
