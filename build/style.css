@@ -93,10 +93,15 @@ table {
     width: 100%;
 }
 
-td .key {
+.key {
     width: 25%;
 }
 
-td .value {
+.value {
     width: 75%;
+}
+
+.pad {
+    padding: 0.5em;
+    box-sizing: border-box;
 }
