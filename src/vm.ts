@@ -191,6 +191,12 @@ export async function interpret_(globals: runtime.Environment, env: runtime.Envi
                 break;
             }
 
+            case 'MakeFunction': {
+                let fn = new runtime.Function(instr.name, instr.params, instr.instrs);
+                env.put_variable(instr.name, fn);
+                break;
+            }
+
             case 'Assign': {
                 env.set_variable(instr.name, instr.value.resolve(registers));
                 break;

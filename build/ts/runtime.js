@@ -56,6 +56,8 @@ class Environment {
             throw new Error(`set variable that does not exist: '${name}'`); // TODO: new runtime error class to catch
     }
     put_variable(name, value) {
+        if (this.variables.has(name))
+            throw new Error(`redefine variable '${name}'`);
         this.variables.set(name, value);
     }
 }

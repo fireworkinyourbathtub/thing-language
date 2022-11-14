@@ -111,6 +111,10 @@ function pretty_print(instrs) {
                 append(instr, `read_var ${instr.name} -> ${instr.dest.pretty_print()};`, instr.span);
                 break;
             }
+            case 'MakeFunction': {
+                append(instr, `make_function ${instr.name}(${instr.params.join()}) { ... }`, instr.span);
+                break;
+            }
             case 'Assign': {
                 append(instr, `assign ${instr.name} = ${instr.value.pretty_print()};`, instr.span);
                 break;

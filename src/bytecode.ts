@@ -2,7 +2,7 @@ import * as diagnostics from './diagnostics';
 import * as ast from './ast';
 import * as runtime from './runtime';
 
-export type Instruction = StmtMarker | UnaryOp | BinaryOp | Call | Assign | ReadVar | EndScope | StartScope | Return | If | While | MakeVar | Print;
+export type Instruction = StmtMarker | UnaryOp | BinaryOp | Call | Assign | ReadVar | EndScope | StartScope | Return | If | While | MakeVar | Print | MakeFunction;
 
 export interface Print extends diagnostics.Located {
     type: 'Print';
@@ -32,6 +32,13 @@ export interface If extends diagnostics.Located {
 export interface Return extends diagnostics.Located {
     type: 'Return';
     value: runtime.Value;
+}
+
+export interface MakeFunction extends diagnostics.Located {
+    type: 'MakeFunction';
+    name: string;
+    params: string[];
+    instrs: Instruction[];
 }
 
 export interface StartScope extends diagnostics.Located {
@@ -179,6 +186,11 @@ export function pretty_print(instrs: Instruction[]): [string, Map<Instruction, [
 
             case 'ReadVar': {
                 append(instr, `read_var ${instr.name} -> ${instr.dest.pretty_print()};`, instr.span);
+                break;
+            }
+
+            case 'MakeFunction': {
+                append(instr, `make_function ${instr.name}(${instr.params.join()}) { ... }`, instr.span);
                 break;
             }
 

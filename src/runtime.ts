@@ -19,6 +19,7 @@ export class Environment {
     }
 
     put_variable(name: string, value: RuntimeValue) {
+        if (this.variables.has(name)) throw new Error(`redefine variable '${name}'`)
         this.variables.set(name, value);
     }
 }
