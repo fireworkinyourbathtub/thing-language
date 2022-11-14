@@ -2,9 +2,12 @@ import * as bytecode from './bytecode';
 import * as runtime from './runtime';
 import * as d3 from 'd3';
 
+const USE_AST = false;
+
 export class CallStackFrame {
     elem: HTMLElement;
     code: HTMLElement;
+    focus: HTMLElement;
     pp: string;
     mapping: Map<bytecode.Instruction, [number, number]>;
 
@@ -13,29 +16,53 @@ export class CallStackFrame {
         this.elem = document.createElement("div");
         this.elem.className = "callstackframe";
 
-        let pre = document.createElement("pre");
-        this.code = document.createElement("code");
-        pre.appendChild(this.code);
-        this.elem.appendChild(pre);
+        {
+            let pre = document.createElement("pre");
+            this.focus = document.createElement("code");
+            pre.appendChild(this.focus);
+            this.elem.appendChild(pre);
+        }
+
+        this.elem.appendChild(document.createElement('hr'));
+
+        {
+            let pre = document.createElement("pre");
+            this.code = document.createElement("code");
+            pre.appendChild(this.code);
+            this.elem.appendChild(pre);
+        }
 
         let callstack = document.getElementById("callstack")!;
         callstack.insertBefore(this.elem, callstack.firstChild);
     }
 
     focus_instr(instr: bytecode.Instruction) {
-        let [start, end] = this.mapping.get(instr)!;
-        let before_text = document.createTextNode(this.pp.substring(0, start));
-        let instr_text = document.createTextNode(this.pp.substring(start, end));
-        let after_text = document.createTextNode(this.pp.substring(end));
+        let before_text, highlight_text, after_text;
+        if (USE_AST) {
+            let src = instr.span.source;
+            let [start, end] = [instr.span.start, instr.span.end];
+            before_text = document.createTextNode(src.substring(0, start));
+            highlight_text = document.createTextNode(src.substring(start, end));
+            after_text = document.createTextNode(src.substring(end));
+        } else {
+            let [start, end] = this.mapping.get(instr)!;
+            before_text = document.createTextNode(this.pp.substring(0, start));
+            highlight_text = document.createTextNode(this.pp.substring(start, end));
+            after_text = document.createTextNode(this.pp.substring(end));
+        }
 
         let instr_span = document.createElement('span');
         instr_span.className = "cur_instruction";
-        instr_span.appendChild(instr_text);
+        instr_span.appendChild(highlight_text);
 
         this.code.innerHTML = "";
         this.code.appendChild(before_text);
         this.code.appendChild(instr_span);
         this.code.appendChild(after_text);
+
+        let instr_text = bytecode.pretty_print([instr])[0];
+        this.focus.innerHTML = "";
+        this.focus.appendChild(document.createTextNode(instr_text));
     }
 
     done() {
@@ -47,23 +74,8 @@ let objsp = d3.select('#objectspace');
 
 objsp.append('h5').text('registers');
 let registers_table = objsp.append('table');
-// registers_table.append('tr')
-//     .attr('class', 'headerrow')
-//     .selectAll('th')
-//     .data(['index', 'value'])
-//     .enter()
-//     .append('th')
-//     .text(i => i);
-
 objsp.append('h5').text('variables');
 let variables_tables_div = objsp.append('div');
-// variables_table.append('tr')
-//     .attr('class', 'headerrow')
-//     .selectAll('th')
-//     .data(['index', 'value'])
-//     .enter()
-//     .append('th')
-//     .text(i => i);
 
 export function current_environment(env: runtime.Environment, registers: runtime.RuntimeValue[]) {
     registers_table
