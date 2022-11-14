@@ -83,6 +83,7 @@ function interpret_(globals, env, instructions) {
         let registers = [];
         for (let instr of instruction_list(registers, instructions)) {
             tracker.focus_instr(instr);
+            visualization.current_environment(env, registers);
             yield new Promise((resolve) => document.getElementById("stepbutton").addEventListener("click", resolve));
             switch (instr.type) {
                 case 'StmtMarker': break;

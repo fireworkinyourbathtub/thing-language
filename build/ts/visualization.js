@@ -23,8 +23,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CallStackFrame = void 0;
+exports.current_environment = exports.CallStackFrame = void 0;
 const bytecode = __importStar(require("./bytecode"));
+const d3 = __importStar(require("d3"));
 class CallStackFrame {
     constructor(instrs) {
         [this.pp, this.mapping] = bytecode.pretty_print(instrs);
@@ -55,3 +56,59 @@ class CallStackFrame {
     }
 }
 exports.CallStackFrame = CallStackFrame;
+let objsp = d3.select('#objectspace');
+objsp.append('h5').text('registers');
+let registers_table = objsp.append('table');
+// registers_table.append('tr')
+//     .attr('class', 'headerrow')
+//     .selectAll('th')
+//     .data(['index', 'value'])
+//     .enter()
+//     .append('th')
+//     .text(i => i);
+objsp.append('h5').text('variables');
+let variables_tables_div = objsp.append('div');
+// variables_table.append('tr')
+//     .attr('class', 'headerrow')
+//     .selectAll('th')
+//     .data(['index', 'value'])
+//     .enter()
+//     .append('th')
+//     .text(i => i);
+function current_environment(env, registers) {
+    registers_table
+        .selectAll('tr:not(.headerrow)').remove();
+    {
+        let rows = registers_table
+            .selectAll('tr:not(.headerrow)')
+            .data(registers)
+            .enter()
+            .append('tr');
+        rows.append('td')
+            .attr('class', 'key')
+            .text((val, i) => `%${i}`);
+        rows.append('td')
+            .attr('class', 'value')
+            .text((val, i) => val.stringify());
+    }
+    {
+        variables_tables_div.selectAll('table').remove();
+        let cur_env = env;
+        while (cur_env) {
+            let rows = variables_tables_div
+                .append('table')
+                .selectAll('tr')
+                .data(cur_env.variables)
+                .enter()
+                .append('tr');
+            rows.append('td')
+                .attr('class', 'key')
+                .text(([name, val]) => name);
+            rows.append('td')
+                .attr('class', 'value')
+                .text(([name, val]) => val.stringify());
+            cur_env = cur_env.parent;
+        }
+    }
+}
+exports.current_environment = current_environment;

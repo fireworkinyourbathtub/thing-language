@@ -1,4 +1,6 @@
 import * as bytecode from './bytecode';
+import * as runtime from './runtime';
+import * as d3 from 'd3';
 
 export class CallStackFrame {
     elem: HTMLElement;
@@ -39,4 +41,71 @@ export class CallStackFrame {
     done() {
         document.getElementById("callstack")!.removeChild(this.elem);
     }
+}
+
+let objsp = d3.select('#objectspace');
+
+objsp.append('h5').text('registers');
+let registers_table = objsp.append('table');
+// registers_table.append('tr')
+//     .attr('class', 'headerrow')
+//     .selectAll('th')
+//     .data(['index', 'value'])
+//     .enter()
+//     .append('th')
+//     .text(i => i);
+
+objsp.append('h5').text('variables');
+let variables_tables_div = objsp.append('div');
+// variables_table.append('tr')
+//     .attr('class', 'headerrow')
+//     .selectAll('th')
+//     .data(['index', 'value'])
+//     .enter()
+//     .append('th')
+//     .text(i => i);
+
+export function current_environment(env: runtime.Environment, registers: runtime.RuntimeValue[]) {
+    registers_table
+        .selectAll('tr:not(.headerrow)').remove();
+
+    {
+        let rows = registers_table
+            .selectAll('tr:not(.headerrow)')
+            .data(registers)
+            .enter()
+            .append('tr');
+
+        rows.append('td')
+            .attr('class', 'key')
+            .text((val, i) => `%${i}`);
+
+        rows.append('td')
+            .attr('class', 'value')
+            .text((val, i) => val.stringify());
+    }
+
+    {
+        variables_tables_div.selectAll('table').remove();
+        let cur_env: runtime.Environment | null = env;
+        while (cur_env) {
+            let rows = variables_tables_div
+                .append('table')
+                .selectAll('tr')
+                .data(cur_env.variables)
+                .enter()
+                .append('tr');
+
+            rows.append('td')
+                .attr('class', 'key')
+                .text(([name, val]) => name);
+
+            rows.append('td')
+                .attr('class', 'value')
+                .text(([name, val]) => val.stringify());
+
+            cur_env = cur_env.parent;
+        }
+    }
+
 }

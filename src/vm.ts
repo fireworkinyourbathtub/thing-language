@@ -50,6 +50,7 @@ export async function interpret_(globals: runtime.Environment, env: runtime.Envi
 
     for (let instr of instruction_list(registers, instructions)) {
         tracker.focus_instr(instr);
+        visualization.current_environment(env, registers);
         await new Promise((resolve) => document.getElementById("stepbutton")!.addEventListener("click", resolve));
 
         switch (instr.type) {
